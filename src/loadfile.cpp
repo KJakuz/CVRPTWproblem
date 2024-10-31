@@ -8,7 +8,7 @@ bool LoadFile::load(const std::string& filename, Graph& graph, Truck& truck) {
     
     std::ifstream file(filename);
     if (!file.is_open()) {
-        std::cerr << "nie można utworzyć pliku " << filename << std::endl;
+        std::cerr << "nie można otworzyć pliku " << filename << std::endl;
         return false;
     }
 
@@ -31,7 +31,7 @@ bool LoadFile::load(const std::string& filename, Graph& graph, Truck& truck) {
     std::vector<Node> nodes;
     while (std::getline(file, line)) {
         if (line.find("CUSTOMER") != std::string::npos) {
-            std::getline(file, line); // Pomijamy linię "CUST NO. ..."
+            std::getline(file, line); 
             int id, x, y, demand, ready_time, due_date, service_time;
             
             while (file >> id >> x >> y >> demand >> ready_time >> due_date >> service_time) {

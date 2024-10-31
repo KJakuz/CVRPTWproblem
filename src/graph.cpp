@@ -1,12 +1,17 @@
 #include <iostream>
 #include <cmath>
+#include <vector>
 #include "graph.h"
 
-void Graph::show_number_nodes(){
-            std::cout<<"123";
-        std::cout<<"numer węzła: "<<number_nodes<<" | "<<Nodes[1].ycord<<std::endl;
-}
+class Truck;
 
+//tworzymy wektor obiektow ciezarowek
+void Graph::init_trucks(Truck& truckinfo){
+    for(int i=0;i<truckinfo.trucks_number+1;i++){
+        trucksvector.push_back(Truck(truckinfo.trucks_number,i,truckinfo.capacity,truckinfo.capacity,0,0));
+    }
+
+}
 
     //liczenie macierzy odleglosci od węzłów
 void Graph::measure_distances(){
@@ -47,4 +52,62 @@ void Graph::show_nodes_values(){
             << ", Czas zamknięcia: " << node.duedate
             << ", Czas obsługi: " << node.servicetime << std::endl;
     }
+}
+
+void Graph::show_one_node_values(Node& node){
+    std::cout << "ID: " << node.id << ", X: " << node.xcord
+            << ", Y: " << node.ycord
+            << ", Zapotrzebowanie: " << node.demand
+            << ", Czas otwarcia: " << node.readytime
+            << ", Czas zamknięcia: " << node.duedate
+            << ", Czas obsługi: " << node.servicetime << std::endl;
+};
+
+
+bool Graph::all_visited(){
+    if(unvisited.size() == 0){
+        return true;
+    }
+    return false;
+}
+
+void Graph::makeunvisitedvector(){
+    for(int i = 1; i < number_nodes; i++){
+        if(Nodes[i].check_if_done==false){
+            unvisited.push_back(Nodes[i]);
+        }
+    }
+}
+
+
+///*
+void Graph::GRASP(){
+    std::vector<std::vector<int>> solution;
+    int counter=0;
+    makeunvisitedvector();
+    while(!all_visited()){
+        std::vector<Node> candidates; // lista kandydatow w formie <<id,odleglosc,czas>,<id,odleglosc,czas>> 
+        for(int i=0;i<unvisited.size();i++){
+            if(trucksvector[counter].which_node!=unvisited[i].id){
+                if(trucksvector[counter].cargo>=unvisited[i].demand){
+                    if(trucksvector[counter].current_time + distances[trucksvector[counter].which_node][unvisited[i].id] <= unvisited[i].duedate){
+                        candidates.push_back(unvisited[i]);
+                        //logika usuwania z unvisited visited wezlow (chyba wydajniejsze niz zawsze robienie nowej listy, tj. przegladania wezlow if done)
+                        unvisited.erase(unvisited.begin() + i);
+                        i--;
+                    }
+                }
+            }
+            else{
+                continue;
+            }
+            //w for
+        }
+        //po for
+        for(int k=0;k<candidates.size();k++){
+            show_one_node_values(candidates[k]);
+        }
+
+    }
+
 }

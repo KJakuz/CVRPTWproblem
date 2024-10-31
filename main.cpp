@@ -21,6 +21,7 @@ int main(int argc, char* argv[]){
         return 1;
     }
 
+    graph.init_trucks(truck);
     //liczenie odleglosci
     graph.measure_distances();
 
@@ -28,8 +29,11 @@ int main(int argc, char* argv[]){
     truck.show_trucks_info();
     graph.show_nodes_values();
     graph.show_distances_matrix();
-
     //...
+    graph.trucksvector[0].show_trucks_info();
+
+    graph.GRASP();
+
 
     return 0;
 }

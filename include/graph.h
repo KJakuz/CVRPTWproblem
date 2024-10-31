@@ -3,6 +3,7 @@
 #include <vector>
 #include "trucks.h"
 
+class Truck;
 
 class Node{
     public:
@@ -17,12 +18,20 @@ class Graph{
         std::vector<Node> Nodes;
         int number_nodes;
         std::vector<std::vector<float>> distances; //tablica z dlugosciami pomiedzy węzłami
+        std::vector<Node> unvisited;
+        std::vector<Truck> trucksvector;
 
-
+        void init_trucks(Truck& truck);
         void measure_distances();
         void show_distances_matrix();
         void show_nodes_values();
         void show_number_nodes();
+        void unvisitedmap();
+        void GRASP();
+        bool all_visited();
+        void create_trucks();
+        void makeunvisitedvector();
+        void show_one_node_values(Node& node);
         //...
         
 };
