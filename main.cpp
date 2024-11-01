@@ -26,13 +26,13 @@ int main(int argc, char* argv[]){
     graph.measure_distances();
 
     // wyswietlanie pomocniczych wartosci
-    truck.show_trucks_info();
-    graph.show_nodes_values();
-    graph.show_distances_matrix();
+    //truck.show_trucks_info();
+    //graph.show_nodes_values();
+    //graph.show_distances_matrix();
     //...
-    graph.trucksvector[0].show_trucks_info();
+    //graph.trucksvector[0].show_trucks_info();
 
-    graph.GRASP();
+    graph.GRASP(10,1,1);
 
 
     return 0;

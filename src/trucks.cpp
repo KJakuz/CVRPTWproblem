@@ -1,5 +1,6 @@
 #include "trucks.h"
 #include <iostream>
+#include <fstream>
 
     //mozna rozladowac w nastepnym węźle?
 bool Truck::check_time(const Node& node,const std::vector<std::vector<float>>& distances){ //const Node& node tworzy stala referencje tj. nie mozna modyfikowac
@@ -32,3 +33,11 @@ void Truck::show_trucks_info(){
 
 }
 
+void Truck::show_route(std::ofstream& outputFile){
+    if(!route.empty()){
+    for(int i=0;i<route.size();i++){
+    outputFile<<route[i]<<" ";
+    }
+    outputFile<<std::endl;
+    }
+}

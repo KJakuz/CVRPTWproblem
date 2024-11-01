@@ -27,7 +27,7 @@ class Graph{
         void show_nodes_values();
         void show_number_nodes();
         void unvisitedmap();
-        void GRASP();
+        void GRASP(int alfa,int beta,int gamma);
         bool all_visited();
         void create_trucks();
         void makeunvisitedvector();

@@ -1,6 +1,8 @@
 #include <iostream>
 #include <cmath>
 #include <vector>
+#include <algorithm>
+#include <fstream>
 #include "graph.h"
 
 class Truck;
@@ -79,35 +81,89 @@ void Graph::makeunvisitedvector(){
     }
 }
 
+bool compareCandidates( std::pair<Node,float>& a, std::pair<Node,float>& b) {
+    return a.second < b.second; // rosnaco wedlug kosztow
+}
 
 ///*
-void Graph::GRASP(){
+void Graph::GRASP(int alfa,int beta,int gamma){
+    std::ofstream outputFile("program.txt");
+    if (!outputFile.is_open()) {
+        std::cerr << "Nie można otworzyć pliku" << std::endl;
+        return;
+    }
+    //zapewnienie losowosci 
+    srand(static_cast<unsigned int>(time(nullptr)));
+
     std::vector<std::vector<int>> solution;
-    int counter=0;
+    int counter = 0;
     makeunvisitedvector();
     while(!all_visited()){
-        std::vector<Node> candidates; // lista kandydatow w formie <<id,odleglosc,czas>,<id,odleglosc,czas>> 
+
+        if(counter >= trucksvector.size()) {
+            trucksvector.push_back(Truck(0,counter,trucksvector[0].capacity,trucksvector[0].capacity,0,0));
+        }
+
+        std::vector<std::pair<Node,float>> candidates; // lista kandydatow w formie <<wezel>,<koszt>> 
         for(int i=0;i<unvisited.size();i++){
-            if(trucksvector[counter].which_node!=unvisited[i].id){
-                if(trucksvector[counter].cargo>=unvisited[i].demand){
-                    if(trucksvector[counter].current_time + distances[trucksvector[counter].which_node][unvisited[i].id] <= unvisited[i].duedate){
-                        candidates.push_back(unvisited[i]);
-                        //logika usuwania z unvisited visited wezlow (chyba wydajniejsze niz zawsze robienie nowej listy, tj. przegladania wezlow if done)
-                        unvisited.erase(unvisited.begin() + i);
-                        i--;
+            if((trucksvector[counter].capacity>=unvisited[i].demand) && (distances[0][unvisited[i].id]<unvisited[i].duedate)){
+                if(trucksvector[counter].which_node!=unvisited[i].id){
+                    if(trucksvector[counter].cargo>=unvisited[i].demand){
+                        if(trucksvector[counter].current_time + distances[trucksvector[counter].which_node][unvisited[i].id] < unvisited[i].duedate){
+                            //obliczanie kosztow
+                            float waiting_time = std::max(0.0f,Nodes[i].readytime-(trucksvector[counter].current_time + distances[trucksvector[counter].which_node][unvisited[i].id]));
+                            float window_time = std::max(0.0f,Nodes[i].duedate-(trucksvector[counter].current_time + distances[trucksvector[counter].which_node][unvisited[i].id]));
+                            float cost = alfa*distances[trucksvector[counter].which_node][unvisited[i].id] + beta*window_time + gamma*waiting_time;
+                            candidates.push_back(std::make_pair(unvisited[i],cost));
+
+                        }
                     }
                 }
             }
             else{
-                continue;
+                std::cout<<distances[trucksvector[counter].which_node][unvisited[i].id]<<" "<<unvisited[i].duedate;
+                int failed=-1;
+                outputFile<<failed;
+                outputFile.close();
+                exit(1);
+                
             }
             //w for
         }
-        //po for
-        for(int k=0;k<candidates.size();k++){
-            show_one_node_values(candidates[k]);
+        //po for kandydatow
+        if(candidates.size()==0){
+            counter++;
+            continue;
         }
+        //sortowanie kandydatow rosnaco pod wzgledem kosztu
+        std::sort(candidates.begin(),candidates.end(),compareCandidates);
+        
+        //wybieramy losowo z pierwszych 10% kandydatow
+        int limit = std::max(static_cast<int>(candidates.size()/10),1);
+        int next_node_index = std::rand() % limit;
+
+        //OCZEKWIANIE !
+
+        trucksvector[counter].route.push_back(candidates[next_node_index].first.id);
+        trucksvector[counter].cargo -= candidates[next_node_index].first.demand;
+        trucksvector[counter].current_time += distances[trucksvector[counter].which_node][candidates[next_node_index].first.id] + candidates[next_node_index].first.servicetime;
+        trucksvector[counter].which_node = candidates[next_node_index].first.id;
+        candidates[next_node_index].first.check_if_done=true;
+        
+        //usuniecie z unvisited wezla przez ktory przejezdzamy / nie wiem co to
+        unvisited.erase(std::remove_if(unvisited.begin(), unvisited.end(),[&](Node& node){ return node.id == candidates[next_node_index].first.id; }),unvisited.end());
 
     }
+
+    float alltime = 0;
+    for(int i=0;i<trucksvector.size();i++){
+        alltime += (trucksvector[i].current_time + distances[trucksvector[i].which_node][0]);
+    }
+    outputFile << counter + 1 << " " << alltime << std::endl;
+    for(int l=0; l<trucksvector.size(); l++) {
+        trucksvector[l].show_route(outputFile);
+    }
+
+    outputFile.close();
 
 }

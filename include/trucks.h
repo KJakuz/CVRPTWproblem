@@ -1,6 +1,7 @@
 #ifndef TRUCKS_H
 #define TRUCKS_H
 #include "graph.h"
+#include <fstream>
 #include <vector>
 
 class Node;
@@ -10,7 +11,7 @@ class Truck{
         int trucks_number, capacity ,id;
         int cargo; //ile jeszcze ma na pace
         int which_node; // gdzie jest
-        int current_time; //aktualny czas/ może float?
+        float current_time; //aktualny czas/ może float?
         std::vector<int> route;
 
         Truck(int trucks_number,int id,int capacity,int cargo,int which_node,int current_time): trucks_number(trucks_number), id(id), 
@@ -23,7 +24,7 @@ class Truck{
         bool check_time(const Node& node, const std::vector<std::vector<float>>& distances);
         bool check_cargo(const Node& node);
         void show_trucks_info();
-
+        void show_route(std::ofstream& outputFile);
 
 };
 #endif
