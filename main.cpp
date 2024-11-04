@@ -32,7 +32,7 @@ int main(int argc, char* argv[]){
     //...
     //graph.trucksvector[0].show_trucks_info();
 
-    graph.GRASP(10,1,1);
+    graph.rungrasp();
 
 
     return 0;

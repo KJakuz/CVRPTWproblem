@@ -2,8 +2,10 @@
 #define GRAPH_H
 #include <vector>
 #include "trucks.h"
+#include "parameters.h"
 
 class Truck;
+class Parameters;
 
 class Node{
     public:
@@ -27,11 +29,13 @@ class Graph{
         void show_nodes_values();
         void show_number_nodes();
         void unvisitedmap();
-        void GRASP(int alfa,int beta,int gamma);
+        int GRASP();
         bool all_visited();
         void create_trucks();
         void makeunvisitedvector();
         void show_one_node_values(Node& node);
+        void rungrasp();
+        void reset_trucks();
         //...
         
 };

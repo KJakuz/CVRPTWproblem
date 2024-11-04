@@ -17,8 +17,7 @@ class Truck{
         Truck(int trucks_number,int id,int capacity,int cargo,int which_node,int current_time): trucks_number(trucks_number), id(id), 
                                                 capacity(capacity), cargo(cargo), which_node(which_node), current_time(current_time){}
         
-        Truck() 
-            : id(-1), capacity(-1), cargo(-1), which_node(-1), current_time(-1){}
+        Truck() : id(-1), capacity(-1), cargo(-1), which_node(-1), current_time(-1){}
         
         
         bool check_time(const Node& node, const std::vector<std::vector<float>>& distances);
