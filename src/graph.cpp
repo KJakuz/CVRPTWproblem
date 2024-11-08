@@ -5,6 +5,7 @@
 #include <fstream>
 #include <chrono>
 #include <iomanip>
+#include <random>
 #include "graph.h"
 
 class Truck;
@@ -157,8 +158,12 @@ int Graph::GRASP(){
         std::sort(candidates.begin(),candidates.end(),compareCandidates);
         
         //wybieramy losowo wezel z pierwszych iles procent kandydatow
-        int limit = std::max(static_cast<int>(candidates.size()*(parameters.RCLpercent/100)),1);
-        int next_node_index = std::rand() % limit;
+         //wybieramy losowo wezel z pierwszych iles procent kandydatow
+        int limit = std::max(static_cast<int>(candidates.size()*(parameters.RCLpercent/100.0)),1);
+        std::random_device rd; 
+        std::mt19937 gen(rd()); 
+        std::uniform_int_distribution<> dis(0, limit - 1);
+        int next_node_index = dis(gen);
 
         //aktualizujemy atrybuty ciezarowki
         trucksvector[counter].route.push_back(candidates[next_node_index].first.id);
