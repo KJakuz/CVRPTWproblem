@@ -34,7 +34,7 @@ class Graph{
         void create_trucks();
         void makeunvisitedvector();
         void show_one_node_values(Node& node);
-        void rungrasp();
+        float rungrasp();
         void reset_trucks();
         //...
         

@@ -5,6 +5,7 @@
 #include <fstream>
 #include <chrono>
 #include <iomanip>
+#include <random>
 #include "graph.h"
 
 class Truck;
@@ -100,14 +101,9 @@ bool compareCandidates( std::pair<Node,float>& a, std::pair<Node,float>& b) {
 
     //glowny algorytm
 int Graph::GRASP(){
-    std::ofstream outputFile("program.txt");
-    if (!outputFile.is_open()) {
-        std::cerr << "Nie można otworzyć pliku" << std::endl;
-        return -1;
-    }
+
 
     //zapewnienie losowosci 
-    srand(static_cast<unsigned int>(time(nullptr)));
 
     std::vector<std::vector<int>> solution;
     int counter = 0;
@@ -142,8 +138,6 @@ int Graph::GRASP(){
             else{
                 //jesli niemozliwy transport
                 int failed=-1;
-                outputFile<<failed;
-                outputFile.close();
                 exit(1);
             }
         }
@@ -157,8 +151,12 @@ int Graph::GRASP(){
         std::sort(candidates.begin(),candidates.end(),compareCandidates);
         
         //wybieramy losowo wezel z pierwszych iles procent kandydatow
-        int limit = std::max(static_cast<int>(candidates.size()*(parameters.RCLpercent/100)),1);
-        int next_node_index = std::rand() % limit;
+        int limit = std::max(static_cast<int>(candidates.size()*(parameters.RCLpercent/100.0)),1);
+        std::random_device rd; 
+        std::mt19937 gen(rd()); 
+        std::uniform_int_distribution<> dis(0, limit - 1);
+        int next_node_index = dis(gen);
+        //std::cout<<"\nwylosowane: "<<next_node_index<<"|\n"<< "Candidates size: " << candidates.size() << " |limit: " << limit << "\n";;
 
         //aktualizujemy atrybuty ciezarowki
         trucksvector[counter].route.push_back(candidates[next_node_index].first.id);
@@ -193,15 +191,15 @@ void Graph::reset_trucks(){
 }
 
     //wielokrotne urucha,mianie graspa
-void Graph::rungrasp(){
+float Graph::rungrasp(){
     float best_alltime = 99999999;
     int best_trucks_number = 99999999;
-
+    std::cout<<"\n"<<parameters.distance_cost_param<<";"<< parameters.window_time_param<<";"<< parameters.waiting_time_param<<";"<< parameters.RCLpercent <<";";
+    
     std::vector<std::vector<int>> best_routes;
 
     auto start_time = std::chrono::steady_clock::now();
     auto end_time = start_time + std::chrono::seconds(parameters.time_limit_in_seconds);
-
     while(std::chrono::steady_clock::now() < end_time){
         reset_trucks();
         int counter=GRASP();
@@ -223,17 +221,6 @@ void Graph::rungrasp(){
         }
 
     }
-
-     std::ofstream outputFile("program.txt");
-    if (!outputFile.is_open()) {
-        std::cerr << "Nie można otworzyć pliku" << std::endl;
-        return;
-    }
-
-    outputFile << std::fixed << std::setprecision(5)<< best_trucks_number + 1 << " " << best_alltime << std::endl;
-    for(int l=0; l<trucksvector.size(); l++) {
-        trucksvector[l].show_route(outputFile);
-    }
-
-    outputFile.close();
+    std::cout<<std::fixed << std::setprecision(5)<<best_trucks_number<<";"<<best_alltime;
+return best_trucks_number,best_alltime;
 }
