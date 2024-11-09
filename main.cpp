@@ -32,35 +32,30 @@ int main(int argc, char* argv[]){
 
 
     //grid search
-    int distanceparams[4]={1,15,25,35};
-    int windowtimeparams[4]={1,15,25,35};
-    int waitingtimeparams[4]={1,15,25,35};
-    int RLCpercentparams[4]={1,2,4,5};
+    int distanceparams[5]={25,15,25,35,50};
+    int waitingtimeparams[5]={50,15,25,35,50};
+    int rcl[3]={1,5,10};
+
     int trucks=0;
     float distance=0;
 
 
-    graph.rungrasp();
-    /*
-    for(int i = 0; i < 4; i++) {
-        for(int j = 0; j < 4; j++) {
-            for(int k = 0; k < 4; k++) {
-                for(int l = 0; l < 4; l++) {
+    //graph.rungrasp();
+for(int s=0;s<3;s++){
+    for(int i = 0; i < 5; i++) {
+            for(int k = 0; k < 5; k++) {
+                for(int j=0;j<3;j++){
                     parameters.distance_cost_param = distanceparams[i];
-                    parameters.window_time_param = windowtimeparams[j];
                     parameters.waiting_time_param = waitingtimeparams[k];
-                    parameters.RCLpercent = RLCpercentparams[l];
+                    parameters.RCLpercent = rcl[j];
                     trucks, distance = graph.rungrasp();
                     //outputFile <<parameters.distance_cost_param<<";"<< parameters.window_time_param<<";"<< parameters.waiting_time_param<<";"<< parameters.RCLpercent <<";";
                     //outputFile << std::fixed << std::setprecision(5)<< trucks + 1 << ";" << distance << std::endl;
                     //outputFile <<"siema";
-
-                }
             }
-        }
+            }
     }
-    */
-    
+}
 
     return 0;
 }

@@ -198,29 +198,43 @@ float Graph::rungrasp(){
     
     std::vector<std::vector<int>> best_routes;
 
-    auto start_time = std::chrono::steady_clock::now();
+     auto start_time = std::chrono::steady_clock::now();
     auto end_time = start_time + std::chrono::seconds(parameters.time_limit_in_seconds);
+    //procent do wyboru kandydata z rcl jest adaptacyjny, na poczatku programu 1 -> 6 -> 11 -> 16 aby rozwijac mozliwe odpowiedzi
+    auto quarter_duration = (end_time - start_time)/4;
+    auto change_rcl_percent = start_time + quarter_duration;
+
     while(std::chrono::steady_clock::now() < end_time){
         reset_trucks();
         int counter=GRASP();
           
+
+          if(std::chrono::steady_clock::now() >= change_rcl_percent){
+            //parameters.RCLpercent += 5;
+            change_rcl_percent += quarter_duration;
+        }
+
         float alltime = 0;
         for(int i = 0; i < trucksvector.size(); i++){
             alltime += trucksvector[i].current_time + distances[trucksvector[i].which_node][0];
         }
         
-         if (counter < best_trucks_number) {
-            best_alltime = alltime;
-            best_trucks_number = counter;
+          if (counter <= best_trucks_number) {
+            if(alltime < best_alltime){
+                best_alltime = alltime;
+                best_trucks_number = counter;
+                //std::cout<<"rclpercent: "<<parameters.RCLpercent<<", new solution ";
 
 
-            best_routes.clear();
-            for (int l = 0; l < trucksvector.size(); l++) {
-                best_routes.push_back(trucksvector[l].route);
+                best_routes.clear();
+                for (int l = 0; l < trucksvector.size(); l++) {
+                    best_routes.push_back(trucksvector[l].route);
+                }
             }
-        }
+         }
 
     }
     std::cout<<std::fixed << std::setprecision(5)<<best_trucks_number<<";"<<best_alltime;
+    parameters.RCLpercent =1;
 return best_trucks_number,best_alltime;
 }
