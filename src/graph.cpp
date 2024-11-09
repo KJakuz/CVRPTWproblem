@@ -227,7 +227,6 @@ void Graph::rungrasp(){
             if(alltime < best_alltime){
                 best_alltime = alltime;
                 best_trucks_number = counter;
-                std::cout<<"rclpercent: "<<parameters.RCLpercent<<", new solution ";
 
 
                 best_routes.clear();
@@ -247,11 +246,16 @@ void Graph::rungrasp(){
     }
 
     outputFile << std::fixed << std::setprecision(5)<< best_trucks_number + 1 << " " << best_alltime << std::endl;
+    std::cout << std::fixed << std::setprecision(5)<< best_trucks_number + 1 << " " << best_alltime << std::endl;
     for(int l=0; l<best_routes.size(); l++) {
+        if (!best_routes[l].empty()) {
         for(int k=0;k<best_routes[l].size();k++){
             outputFile << best_routes[l][k] <<" ";
+            std::cout << best_routes[l][k] <<" ";
         }
         outputFile << std::endl;
+        std::cout << std::endl;
+    }
     }
 
     outputFile.close();

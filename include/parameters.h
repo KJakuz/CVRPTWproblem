@@ -3,11 +3,11 @@
 
 class Parameters {
     public:
-        int distance_cost_param = 35;
+        int distance_cost_param = 25;
         int window_time_param = 1;
         int waiting_time_param = 25;
         int RCLpercent = 1;
-        int time_limit_in_seconds = 120;
+        int time_limit_in_seconds = 180;
 
         Parameters() {}
 
