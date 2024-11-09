@@ -206,26 +206,37 @@ void Graph::rungrasp(){
 
     auto start_time = std::chrono::steady_clock::now();
     auto end_time = start_time + std::chrono::seconds(parameters.time_limit_in_seconds);
+    //procent do wyboru kandydata z rcl jest adaptacyjny, na poczatku programu 1 -> 6 -> 11 -> 16 aby rozwijac mozliwe odpowiedzi
+    auto quarter_duration = (end_time - start_time)/4;
+    auto change_rcl_percent = start_time + quarter_duration;
 
     while(std::chrono::steady_clock::now() < end_time){
         reset_trucks();
         int counter=GRASP();
-          
+        
+        if(std::chrono::steady_clock::now() >= change_rcl_percent){
+            parameters.RCLpercent += 5;
+            change_rcl_percent += quarter_duration;
+        }
         float alltime = 0;
         for(int i = 0; i < trucksvector.size(); i++){
             alltime += trucksvector[i].current_time + distances[trucksvector[i].which_node][0];
         }
         
-         if (counter < best_trucks_number) {
-            best_alltime = alltime;
-            best_trucks_number = counter;
+         if (counter <= best_trucks_number) {
+            if(alltime < best_alltime){
+                best_alltime = alltime;
+                best_trucks_number = counter;
+                std::cout<<"rclpercent: "<<parameters.RCLpercent<<", new solution ";
 
 
-            best_routes.clear();
-            for (int l = 0; l < trucksvector.size(); l++) {
-                best_routes.push_back(trucksvector[l].route);
+                best_routes.clear();
+                for (int l = 0; l < trucksvector.size(); l++) {
+                    best_routes.push_back(trucksvector[l].route);
+                }
             }
-        }
+         }
+        
 
     }
 
@@ -236,8 +247,11 @@ void Graph::rungrasp(){
     }
 
     outputFile << std::fixed << std::setprecision(5)<< best_trucks_number + 1 << " " << best_alltime << std::endl;
-    for(int l=0; l<trucksvector.size(); l++) {
-        trucksvector[l].show_route(outputFile);
+    for(int l=0; l<best_routes.size(); l++) {
+        for(int k=0;k<best_routes[l].size();k++){
+            outputFile << best_routes[l][k] <<" ";
+        }
+        outputFile << std::endl;
     }
 
     outputFile.close();
