@@ -133,7 +133,9 @@ int Graph::GRASP(){
                             //obliczanie kosztow kandydatow
                             double waiting_time_costs = std::max(0.0,unvisited[i].readytime-(trucksvector[counter].current_time + distances[trucksvector[counter].which_node][unvisited[i].id]));
                             double window_time_costs = std::max(0.0,unvisited[i].duedate-(trucksvector[counter].current_time + distances[trucksvector[counter].which_node][unvisited[i].id]));
-                            double cost = parameters.distance_cost_param*distances[trucksvector[counter].which_node][unvisited[i].id] + parameters.window_time_param*window_time_costs + parameters.waiting_time_param*waiting_time_costs;
+                            double demand_cost = (trucksvector[counter].capacity-trucksvector[counter].cargo) - unvisited[i].demand;
+                            double cost = parameters.distance_cost_param*distances[trucksvector[counter].which_node][unvisited[i].id] + 
+                                + parameters.demand_param*demand_cost +parameters.window_time_param*window_time_costs + parameters.waiting_time_param*waiting_time_costs;
                             candidates.push_back(std::make_pair(unvisited[i],cost));
 
                         }
