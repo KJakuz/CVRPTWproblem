@@ -19,7 +19,7 @@ class Graph{
     public:
         std::vector<Node> Nodes;
         int number_nodes;
-        std::vector<std::vector<float>> distances; //tablica z dlugosciami pomiedzy węzłami
+        std::vector<std::vector<double>> distances; //tablica z dlugosciami pomiedzy węzłami
         std::vector<Node> unvisited;
         std::vector<Truck> trucksvector;
 

@@ -24,7 +24,7 @@ void Graph::init_trucks(Truck& truckinfo){
 
     //liczenie macierzy odleglosci od węzłów
 void Graph::measure_distances(){
-    distances.resize(number_nodes, std::vector<float>(number_nodes, 0.0f)); //alokacja pamiec, wielkosc macierzy number_nodes i zapisanej zerami
+    distances.resize(number_nodes, std::vector<double>(number_nodes, 0.0f)); //alokacja pamiec, wielkosc macierzy number_nodes i zapisanej zerami
     for(int i=0;i<number_nodes;i++){
         for(int j=0;j<number_nodes;j++){
             //wzor na odleglosc na plaszczyznie euklidesowej
@@ -94,7 +94,7 @@ void Graph::makeunvisitedvector(){
 }
 
     //do sortowania
-bool compareCandidates( std::pair<Node,float>& a, std::pair<Node,float>& b) {
+bool compareCandidates( std::pair<Node,double>& a, std::pair<Node,double>& b) {
     return a.second < b.second; // rosnaco wedlug kosztow
 }
 
@@ -120,7 +120,7 @@ int Graph::GRASP(){
             trucksvector.push_back(Truck(0,counter,trucksvector[0].capacity,trucksvector[0].capacity,0,0));
         }
 
-        std::vector<std::pair<Node,float>> candidates; // lista kandydatow w formie <<wezel>,<koszt>> 
+        std::vector<std::pair<Node,double>> candidates; // lista kandydatow w formie <<wezel>,<koszt>> 
         
     
 
@@ -131,9 +131,9 @@ int Graph::GRASP(){
                     if(trucksvector[counter].cargo>=unvisited[i].demand){
                         if(trucksvector[counter].current_time + distances[trucksvector[counter].which_node][unvisited[i].id] < unvisited[i].duedate){
                             //obliczanie kosztow kandydatow
-                            float waiting_time_costs = std::max(0.0f,unvisited[i].readytime-(trucksvector[counter].current_time + distances[trucksvector[counter].which_node][unvisited[i].id]));
-                            float window_time_costs = std::max(0.0f,unvisited[i].duedate-(trucksvector[counter].current_time + distances[trucksvector[counter].which_node][unvisited[i].id]));
-                            float cost = parameters.distance_cost_param*distances[trucksvector[counter].which_node][unvisited[i].id] + parameters.window_time_param*window_time_costs + parameters.waiting_time_param*waiting_time_costs;
+                            double waiting_time_costs = std::max(0.0,unvisited[i].readytime-(trucksvector[counter].current_time + distances[trucksvector[counter].which_node][unvisited[i].id]));
+                            double window_time_costs = std::max(0.0,unvisited[i].duedate-(trucksvector[counter].current_time + distances[trucksvector[counter].which_node][unvisited[i].id]));
+                            double cost = parameters.distance_cost_param*distances[trucksvector[counter].which_node][unvisited[i].id] + parameters.window_time_param*window_time_costs + parameters.waiting_time_param*waiting_time_costs;
                             candidates.push_back(std::make_pair(unvisited[i],cost));
 
                         }
@@ -168,7 +168,7 @@ int Graph::GRASP(){
         //aktualizujemy atrybuty ciezarowki
         trucksvector[counter].route.push_back(candidates[next_node_index].first.id);
         trucksvector[counter].cargo -= candidates[next_node_index].first.demand;
-        float waiting_time = std::max(0.0f,candidates[next_node_index].first.readytime-(trucksvector[counter].current_time + distances[trucksvector[counter].which_node][candidates[next_node_index].first.id]));
+        double waiting_time = std::max(0.0,candidates[next_node_index].first.readytime-(trucksvector[counter].current_time + distances[trucksvector[counter].which_node][candidates[next_node_index].first.id]));
         trucksvector[counter].current_time += distances[trucksvector[counter].which_node][candidates[next_node_index].first.id] + candidates[next_node_index].first.servicetime + waiting_time;
         trucksvector[counter].which_node = candidates[next_node_index].first.id;
         candidates[next_node_index].first.check_if_done=true;
@@ -199,7 +199,7 @@ void Graph::reset_trucks(){
 
     //wielokrotne urucha,mianie graspa
 void Graph::rungrasp(){
-    float best_alltime = 99999999;
+    double best_alltime = 99999999;
     int best_trucks_number = 99999999;
 
     std::vector<std::vector<int>> best_routes;
@@ -218,7 +218,7 @@ void Graph::rungrasp(){
             parameters.RCLpercent += 5;
             change_rcl_percent += quarter_duration;
         }
-        float alltime = 0;
+        double alltime = 0;
         for(int i = 0; i < trucksvector.size(); i++){
             alltime += trucksvector[i].current_time + distances[trucksvector[i].which_node][0];
         }
@@ -246,15 +246,15 @@ void Graph::rungrasp(){
     }
 
     outputFile << std::fixed << std::setprecision(5)<< best_trucks_number + 1 << " " << best_alltime << std::endl;
-    std::cout << std::fixed << std::setprecision(5)<< best_trucks_number + 1 << " " << best_alltime << std::endl;
+    //std::cout << std::fixed << std::setprecision(5)<< best_trucks_number + 1 << " " << best_alltime << std::endl;
     for(int l=0; l<best_routes.size(); l++) {
         if (!best_routes[l].empty()) {
         for(int k=0;k<best_routes[l].size();k++){
             outputFile << best_routes[l][k] <<" ";
-            std::cout << best_routes[l][k] <<" ";
+            //std::cout << best_routes[l][k] <<" ";
         }
         outputFile << std::endl;
-        std::cout << std::endl;
+        //std::cout << std::endl;
     }
     }
 
