@@ -3,8 +3,8 @@
 #include <fstream>
 
     //mozna rozladowac w nastepnym węźle?
-bool Truck::check_time(const Node& node,const std::vector<std::vector<float>>& distances){ //const Node& node tworzy stala referencje tj. nie mozna modyfikowac
-    float distance_to_next = distances[which_node][node.id]; //moze -1
+bool Truck::check_time(const Node& node,const std::vector<std::vector<double>>& distances){ //const Node& node tworzy stala referencje tj. nie mozna modyfikowac
+    double distance_to_next = distances[which_node][node.id]; //moze -1
     if((current_time + distance_to_next <= node.duedate) && (node.readytime >= current_time + distance_to_next)){
         return true;
     }

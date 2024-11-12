@@ -11,7 +11,7 @@ class Truck{
         int trucks_number, capacity ,id;
         int cargo; //ile jeszcze ma na pace
         int which_node; // gdzie jest
-        float current_time; //aktualny czas/ może float?
+        double current_time; //aktualny czas/ może double?
         std::vector<int> route;
 
         Truck(int trucks_number,int id,int capacity,int cargo,int which_node,int current_time): trucks_number(trucks_number), id(id), 
@@ -20,7 +20,7 @@ class Truck{
         Truck() : id(-1), capacity(-1), cargo(-1), which_node(-1), current_time(-1){}
         
         
-        bool check_time(const Node& node, const std::vector<std::vector<float>>& distances);
+        bool check_time(const Node& node, const std::vector<std::vector<double>>& distances);
         bool check_cargo(const Node& node);
         void show_trucks_info();
         void show_route(std::ofstream& outputFile);
