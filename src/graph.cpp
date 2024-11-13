@@ -101,7 +101,7 @@ bool compareCandidates( std::pair<Node,double>& a, std::pair<Node,double>& b) {
 
     //glowny algorytm
 int Graph::GRASP(){
-    std::ofstream outputFile("program.txt");
+    std::ofstream outputFile("wyniki.txt");
     if (!outputFile.is_open()) {
         std::cerr << "Nie można otworzyć pliku" << std::endl;
         return -1;
@@ -241,7 +241,7 @@ void Graph::rungrasp(){
 
     }
 
-     std::ofstream outputFile("program.txt");
+     std::ofstream outputFile("wyniki.txt");
     if (!outputFile.is_open()) {
         std::cerr << "Nie można otworzyć pliku" << std::endl;
         return;
