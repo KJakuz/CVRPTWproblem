@@ -3,12 +3,14 @@
 
 class Parameters {
     public:
-        int distance_cost_param = 1;
+        int distance_cost_param = 60;
         int window_time_param = 1;
-        int waiting_time_param = 1;
+        int waiting_time_param = 40;
+        int demand_param = 20;
+
+        //startowe procenty wyboru kanydata z RCL
         int RCLpercent = 1;
-        int demand_param = 100;
-        int time_limit_in_seconds = 3;
+        int time_limit_in_seconds = 2;
 
         Parameters() {}
 

@@ -32,30 +32,42 @@ int main(int argc, char* argv[]){
 
 
     //grid search
-    int distanceparams[5]={1,5,10,15,20};
-    int waitingtimeparams[5]={1,5,10,15,20};
-    int demandparams[5]={1,5,10,15,20};
+    int distanceparams[4]={1,20,40,60};
+    int waitingtimeparams[4]={1,20,40,60};
+    int demandparams[4]={20,60,120,300};
+    int windowparams[4]={1,20,40,60};
+    int timeparam[7]={10,30,50,100,150,300,500};
 
     int trucks=0;
     double distance=0;
-
-
-    //graph.rungrasp();
-for(int s=0;s<3;s++){
-    for(int i = 0; i < 5; i++) {
-            for(int k = 0; k < 5; k++) {
-                for(int j=0;j < 5;j++){
-                    parameters.distance_cost_param = distanceparams[i];
-                    parameters.waiting_time_param = waitingtimeparams[k];
-                    parameters.demand_param = demandparams[j];
-                    trucks, distance = graph.rungrasp();
-                    //outputFile <<parameters.distance_cost_param<<";"<< parameters.window_time_param<<";"<< parameters.waiting_time_param<<";"<< parameters.RCLpercent <<";";
-                    //outputFile << std::fixed << std::setprecision(5)<< trucks + 1 << ";" << distance << std::endl;
-                    //outputFile <<"siema";
-            }
-            }
+    for(int i=0;i<3;i++){
+        for(int s=5;s<7;s++){
+            parameters.time_limit_in_seconds = timeparam[s];
+            graph.rungrasp();
+        }
     }
-}
+
+
+    /*
+        //graph.rungrasp();
+    for(int s=0;s<3;s++){
+        for(int i = 0; i < 4; i++) {
+                for(int k = 0; k < 4; k++) {
+                    for(int j=0;j < 4;j++){
+                        for(int m=0;m < 4;m++){
+                        parameters.distance_cost_param = distanceparams[i];
+                        parameters.waiting_time_param = waitingtimeparams[k];
+                        parameters.window_time_param = windowparams[j];
+                        parameters.demand_param = demandparams[m];
+                        trucks, distance = graph.rungrasp();
+                        //outputFile <<parameters.distance_cost_param<<";"<< parameters.window_time_param<<";"<< parameters.waiting_time_param<<";"<< parameters.RCLpercent <<";";
+                        //outputFile << std::fixed << std::setprecision(5)<< trucks + 1 << ";" << distance << std::endl;
+                        //outputFile <<"siema";
+                    }
+                    }
+                }
+        }
+    }*/
 
     return 0;
 }
