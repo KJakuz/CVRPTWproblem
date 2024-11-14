@@ -20,6 +20,7 @@ void Graph::init_trucks(Truck &truckinfo)
     }
 }
 
+
 // liczenie macierzy odleglosci od węzłów
 void Graph::measure_distances()
 {
@@ -34,6 +35,7 @@ void Graph::measure_distances()
         }
     }
 }
+
 
 // pomocnicze
 void Graph::show_distances_matrix()
@@ -56,6 +58,7 @@ void Graph::show_distances_matrix()
     }
 }
 
+
 // pomocnicze
 void Graph::show_nodes_values()
 {
@@ -70,6 +73,8 @@ void Graph::show_nodes_values()
                   << ", Czas obsługi: " << node.servicetime << std::endl;
     }
 }
+
+
 // pomocnicze
 void Graph::show_one_node_values(Node &node)
 {
@@ -81,6 +86,7 @@ void Graph::show_one_node_values(Node &node)
               << ", Czas obsługi: " << node.servicetime << std::endl;
 };
 
+
 bool Graph::all_visited()
 {
     if (unvisited.size() == 0)
@@ -89,6 +95,8 @@ bool Graph::all_visited()
     }
     return false;
 }
+
+
 
 // wektor nieodwiedzonych wezlow
 void Graph::makeunvisitedvector()
@@ -102,11 +110,14 @@ void Graph::makeunvisitedvector()
     }
 }
 
+
 // do sortowania
 bool compareCandidates(std::pair<Node, double> &a, std::pair<Node, double> &b)
 {
     return a.second < b.second; // rosnaco wedlug kosztow
 }
+
+
 
 // glowny algorytm
 int Graph::GRASP()
@@ -221,7 +232,7 @@ void Graph::rungrasp()
 
     auto start_time = std::chrono::steady_clock::now();
     auto end_time = start_time + std::chrono::seconds(defaultParameters.time_limit_in_seconds);
-    // procent do wyboru kandydata z rcl jest adaptacyjny, na poczatku programu 1 -> 6 -> 11 -> 16 aby rozwijac mozliwe odpowiedzi
+    // procent do wyboru kandydata z rcl jest zmienny, na poczatku programu 1 -> 6 -> 11 -> 16 aby rozwijac mozliwe odpowiedzi stopniowo
     auto quarter_duration = (end_time - start_time) / 4;
     auto change_rcl_percent = start_time + quarter_duration;
 
