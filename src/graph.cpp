@@ -146,22 +146,19 @@ int Graph::GRASP()
         // sprawdzanie mozliwych kandydatow
         for (int i = 0; i < unvisited.size(); i++)
         {
-            if ((trucksvector[idx_of_truck].capacity >= unvisited[i].demand) && (distances[0][unvisited[i].id] < unvisited[i].duedate))
+            if ((trucksvector[idx_of_truck].capacity >= unvisited[i].demand) && (distances[0][unvisited[i].id] < unvisited[i].duedate) && (unvisited[i].readytime + unvisited[i].servicetime + distances[0][unvisited[i].id] <= Nodes[0].duedate))
             {
-                if (trucksvector[idx_of_truck].which_node != unvisited[i].id) // TODO: czy to jest potrzebne?
+                if (trucksvector[idx_of_truck].cargo >= unvisited[i].demand)
                 {
-                    if (trucksvector[idx_of_truck].cargo >= unvisited[i].demand)
+                    if (trucksvector[idx_of_truck].current_time + distances[trucksvector[idx_of_truck].which_node][unvisited[i].id] < unvisited[i].duedate)
                     {
-                        if (trucksvector[idx_of_truck].current_time + distances[trucksvector[idx_of_truck].which_node][unvisited[i].id] < unvisited[i].duedate)
-                        {
-                            // obliczanie kosztow kandydatow
-                            double waiting_time_costs = std::max(0.0, unvisited[i].readytime - (trucksvector[idx_of_truck].current_time + distances[trucksvector[idx_of_truck].which_node][unvisited[i].id]));
-                            double window_time_costs = std::max(0.0, unvisited[i].duedate - (trucksvector[idx_of_truck].current_time + distances[trucksvector[idx_of_truck].which_node][unvisited[i].id]));
-                            double demand_cost = (trucksvector[idx_of_truck].capacity - trucksvector[idx_of_truck].cargo) - unvisited[i].demand;
-                            double cost = defaultParameters.distance_cost_param * distances[trucksvector[idx_of_truck].which_node][unvisited[i].id] +
-                                          +defaultParameters.demand_param * demand_cost + defaultParameters.window_time_param * window_time_costs + defaultParameters.waiting_time_param * waiting_time_costs;
-                            candidates.push_back(std::make_pair(unvisited[i], cost));
-                        }
+                        // obliczanie kosztow kandydatow
+                        double waiting_time_costs = std::max(0.0, unvisited[i].readytime - (trucksvector[idx_of_truck].current_time + distances[trucksvector[idx_of_truck].which_node][unvisited[i].id]));
+                        double window_time_costs = std::max(0.0, unvisited[i].duedate - (trucksvector[idx_of_truck].current_time + distances[trucksvector[idx_of_truck].which_node][unvisited[i].id]));
+                        double demand_cost = (trucksvector[idx_of_truck].capacity - trucksvector[idx_of_truck].cargo) - unvisited[i].demand;
+                        double cost = defaultParameters.distance_cost_param * distances[trucksvector[idx_of_truck].which_node][unvisited[i].id] +
+                                      +defaultParameters.demand_param * demand_cost + defaultParameters.window_time_param * window_time_costs + defaultParameters.waiting_time_param * waiting_time_costs;
+                        candidates.push_back(std::make_pair(unvisited[i], cost));
                     }
                 }
             }
