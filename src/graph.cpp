@@ -197,7 +197,7 @@ double Graph::rungrasp(){
     double best_alltime = 99999999;
     int best_trucks_number = 99999999;
     //std::cout<<"\n"<<parameters.distance_cost_param<<";"<< parameters.window_time_param<<";"<< parameters.waiting_time_param<<";"<< parameters.demand_param <<";";
-    std::cout<<"\n"<<parameters.time_limit_in_seconds<<";";
+    std::cout<<"\n"<<number_nodes-1<<";"<<parameters.time_limit_in_seconds<<";";
     std::vector<std::vector<int>> best_routes;
 
      auto start_time = std::chrono::steady_clock::now();

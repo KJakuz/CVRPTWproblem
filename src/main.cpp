@@ -36,16 +36,14 @@ int main(int argc, char* argv[]){
     int waitingtimeparams[4]={1,20,40,60};
     int demandparams[4]={20,60,120,300};
     int windowparams[4]={1,20,40,60};
-    int timeparam[7]={10,30,50,100,150,300,500};
+    int timeparam[6]={10,30,50,100,150,300};
 
     int trucks=0;
     double distance=0;
-    for(int i=0;i<3;i++){
-        for(int s=5;s<7;s++){
+        for(int s=0;s<6;s++){
             parameters.time_limit_in_seconds = timeparam[s];
             graph.rungrasp();
         }
-    }
 
 
     /*
