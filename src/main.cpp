@@ -3,11 +3,13 @@
 #include "graph.h"
 #include "trucks.h"
 #include "loadfile.h"
+#include "tabu.h"
 
 int main(int argc, char *argv[])
 {
     Graph graph;
     Truck truck;
+    Tabu tabu;
     LoadFile loader;
 
     if (argc < 2)
@@ -26,7 +28,8 @@ int main(int argc, char *argv[])
 
     graph.init_trucks(truck);
     graph.measure_distances();
-    graph.rungrasp();
+    //graph.rungrasp();
+    tabu.Tabu_search(graph);
 
     return 0;
 }

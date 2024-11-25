@@ -150,7 +150,7 @@ int Graph::GRASP()
             {
                 if (trucksvector[idx_of_truck].cargo >= unvisited[i].demand)
                 {
-                    if (trucksvector[idx_of_truck].current_time + distances[trucksvector[idx_of_truck].which_node][unvisited[i].id] < unvisited[i].duedate)
+                    if ((trucksvector[idx_of_truck].current_time + distances[trucksvector[idx_of_truck].which_node][unvisited[i].id] < unvisited[i].duedate) && (trucksvector[idx_of_truck].current_time + distances[trucksvector[idx_of_truck].which_node][unvisited[i].id] + unvisited[i].servicetime + distances[0][unvisited[i].id] <= Nodes[0].duedate))
                     {
                         // obliczanie kosztow kandydatow
                         double waiting_time_costs = std::max(0.0, unvisited[i].readytime - (trucksvector[idx_of_truck].current_time + distances[trucksvector[idx_of_truck].which_node][unvisited[i].id]));
@@ -229,20 +229,24 @@ void Graph::rungrasp()
 
     auto start_time = std::chrono::steady_clock::now();
     auto end_time = start_time + std::chrono::seconds(defaultParameters.time_limit_in_seconds);
-    // procent do wyboru kandydata z rcl jest zmienny, na poczatku programu 1 -> 6 -> 11 -> 16 aby rozwijac mozliwe odpowiedzi stopniowo
+    /* ! To rozwiazanie ma sens tylko w przypadku działania na nieznanych plikach wejściowych, w przypadku gdy znamy instancje lepiej dopasowac RCL% poprzez strojenie
+    procent do wyboru kandydata z rcl jest zmienny, na poczatku programu 1 -> 6 -> 11 -> 16 aby nie wpasc w te same odpowiedzi przez caly czas trwania programu
     auto quarter_duration = (end_time - start_time) / 4;
     auto change_rcl_percent = start_time + quarter_duration;
+    */
 
     while (std::chrono::steady_clock::now() < end_time)
     {
         reset_trucks();
         int number_of_trucks = GRASP();
 
+        /* ! To rozwiazanie ma sens tylko w przypadku działania na nieznanych plikach wejściowych, w przypadku gdy znamy instancje lepiej dopasowac RCL% poprzez strojenie
         if (std::chrono::steady_clock::now() >= change_rcl_percent)
         {
             defaultParameters.RCLpercent += 5;
             change_rcl_percent += quarter_duration;
         }
+        */
         double cost = 0;
         for (int i = 0; i < trucksvector.size(); i++)
         {
