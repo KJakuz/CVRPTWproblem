@@ -15,13 +15,14 @@ class Tabu
         int Tabu_list_size = 50;
         std::vector<std::pair<int, int>> tabu_list;
         int no_improvement_limit = 5;
-        int Max_iterations = 10;
+        int Max_iterations = 1;
 
         int create_first_solution_with_grasp(Graph& graph);
         void Tabu_search(Graph& graph);
-        double calculate_cost(const std::vector<std::vector<int>>& routes, Graph& graph);
-        void update_tabu_list();
-        bool is_tabu(int node1, int node2);
+        double calculate_cost(const std::vector<std::vector<int>>& routes);
+        void generate_neighbours(double& current_cost,double& current_used_trucks,std::vector<std::vector<int>>& current_routes);
+        bool can_be_swaped(int index_of_node1, int index_of_node2,int idx_of_truck1,int idx_of_truck2,Graph& graph);
+
 
 };
 

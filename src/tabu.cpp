@@ -107,6 +107,68 @@ int Tabu::create_first_solution_with_grasp(Graph& graph){
 }
 
 
+bool Tabu::can_be_swaped(int id_of_node1, int id_of_node2,int idx_of_truck1,int idx_of_truck2,Graph& graph){
+    
+    if(id_of_node1 !=id_of_node2 && id_of_node1 != 0 && id_of_node2 != 0){
+        Truck& truck1 = graph.trucksvector[idx_of_truck1];
+        Truck& truck2 = graph.trucksvector[idx_of_truck2];
+        Node& node1 = graph.Nodes[id_of_node1];
+        Node& node2 = graph.Nodes[id_of_node2];
+        
+        truck1.route[id_of_node1] = node2.id;
+        truck2.route[id_of_node2] = node1.id;
+
+
+        double time_for_truck1 = 0, time_for_truck2 = 0;
+        time_for_truck1 += graph.distances[0][truck1.route[0]];
+        time_for_truck2 += graph.distances[0][truck2.route[0]];
+        
+        //sciezka1
+        for(int i=1;i<truck1.route.size();i++){
+            if(time_for_truck1 <= graph.Nodes[truck1.route[i]].duedate){
+                time_for_truck1 += graph.Nodes[truck1.route[i]].servicetime;
+                time_for_truck1 += graph.distances[truck1.route[i]][truck1.route[i+1]];
+            }
+            else{
+                return false;
+            }
+        }
+        time_for_truck1 += graph.distances[0][truck1.route[truck1.route.size()-1]];
+        if(!(time_for_truck1 <= graph.Nodes[0].duedate)){
+            return false;
+        }
+        //sciezka2
+        for(int i=1;i<truck2.route.size();i++){
+            if(time_for_truck2 <= graph.Nodes[truck2.route[i]].duedate){
+                time_for_truck2 += graph.Nodes[truck2.route[i]].servicetime;
+                time_for_truck2 += graph.distances[truck2.route[i]][truck2.route[i+1]];
+            }
+            else{
+                return false;
+            }
+        }
+        time_for_truck2 += graph.distances[0][truck2.route[truck2.route.size()-1]];
+        if(!(time_for_truck2 <= graph.Nodes[0].duedate)){
+            return false;
+        }
+        std::cout<<"swaped "<<node1.id<<"with "<<node2.id;
+        return true;
+    }
+    return false;
+
+}
+
+void Tabu::generate_neighbours(double& current_cost,double& current_used_trucks,std::vector<std::vector<int>>& current_routes){
+    //for(int i=0;i<current_routes.size();i++){
+        //for(int j=0;j<current_routes.size();j++)
+        //    if()
+   // }
+
+
+   // return cost , routes;
+}
+
+
 void Tabu::Tabu_search(Graph& graph){
     //inicjalizacja zmiennych
     double current_solution_cost = 0;
@@ -140,9 +202,16 @@ void Tabu::Tabu_search(Graph& graph){
 
     while(iteration < Max_iterations && no_improvement < no_improvement_limit){
         //tworzenie sąsiednich rozwiązań
-        
+        double neighbour_solution_cost = current_solution_cost, neighbour_solution_used_trucks = current_solution_used_trucks; 
+        std::vector<std::vector<int>> neighbour_solution_routes = current_solution_routes;
+
+        generate_neighbours(neighbour_solution_cost, neighbour_solution_used_trucks, neighbour_solution_routes);
+        can_be_swaped(1,4,1,2,graph);
 
 
+
+
+        iteration ++;
     } 
 
 
