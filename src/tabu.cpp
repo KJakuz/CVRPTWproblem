@@ -107,72 +107,118 @@ int Tabu::create_first_solution_with_grasp(Graph& graph){
 }
 
 
-bool Tabu::can_be_swaped(int id_of_node1, int id_of_node2,int idx_of_truck1,int idx_of_truck2,Graph& graph){
-    
-    if(id_of_node1 !=id_of_node2 && id_of_node1 != 0 && id_of_node2 != 0){
-        Truck& truck1 = graph.trucksvector[idx_of_truck1];
-        Truck& truck2 = graph.trucksvector[idx_of_truck2];
-        Node& node1 = graph.Nodes[id_of_node1];
-        Node& node2 = graph.Nodes[id_of_node2];
+bool Tabu::can_be_swaped(int idx_of_node1, int idx_of_node2,int idx_of_truck1,int idx_of_truck2,Graph& graph){
+    if(idx_of_node1 !=idx_of_node2){
+        Truck truck1 = graph.trucksvector[idx_of_truck1];
+        Truck truck2 = graph.trucksvector[idx_of_truck2];
+        Node node1 = graph.Nodes[truck1.route[idx_of_node1]];
+        Node node2 = graph.Nodes[truck2.route[idx_of_node2]];
         
-        truck1.route[id_of_node1] = node2.id;
-        truck2.route[id_of_node2] = node1.id;
+        truck1.route[idx_of_node1] = node2.id;
+        truck2.route[idx_of_node2] = node1.id;
 
+        double time_for_truck1 = 0, time_for_truck2 = 0,waiting_time_first_node_truck1=0,waiting_time_first_node_truck2=0;
+        double cargo_for_truck1 = truck1.capacity, cargo_for_truck2 = truck2.capacity;
 
-        double time_for_truck1 = 0, time_for_truck2 = 0;
-        time_for_truck1 += graph.distances[0][truck1.route[0]];
-        time_for_truck2 += graph.distances[0][truck2.route[0]];
-        
         //sciezka1
-        for(int i=1;i<truck1.route.size();i++){
-            if(time_for_truck1 <= graph.Nodes[truck1.route[i]].duedate){
-                time_for_truck1 += graph.Nodes[truck1.route[i]].servicetime;
-                time_for_truck1 += graph.distances[truck1.route[i]][truck1.route[i+1]];
-            }
-            else{
-                return false;
-            }
-        }
-        time_for_truck1 += graph.distances[0][truck1.route[truck1.route.size()-1]];
-        if(!(time_for_truck1 <= graph.Nodes[0].duedate)){
-            return false;
-        }
-        //sciezka2
-        for(int i=1;i<truck2.route.size();i++){
-            if(time_for_truck2 <= graph.Nodes[truck2.route[i]].duedate){
-                time_for_truck2 += graph.Nodes[truck2.route[i]].servicetime;
-                time_for_truck2 += graph.distances[truck2.route[i]][truck2.route[i+1]];
-            }
-            else{
-                return false;
-            }
-        }
-        time_for_truck2 += graph.distances[0][truck2.route[truck2.route.size()-1]];
-        if(!(time_for_truck2 <= graph.Nodes[0].duedate)){
-            return false;
-        }
-        std::cout<<"swaped "<<node1.id<<"with "<<node2.id;
-        return true;
-    }
-    return false;
+        time_for_truck1 = is_single_route_possible(truck1.route,graph);
+        time_for_truck2 = is_single_route_possible(truck2.route,graph);
 
+        if(time_for_truck1 == -1 || time_for_truck2 == -1){
+
+            return false;
+        
+        }
+        else{
+
+            graph.trucksvector[idx_of_truck2].current_time = time_for_truck2; 
+            graph.trucksvector[idx_of_truck1].current_time = time_for_truck1; 
+
+        } 
+        
+    return true;
+    }
+    else{
+        return false;
+        }
 }
 
-void Tabu::generate_neighbours(double& current_cost,double& current_used_trucks,std::vector<std::vector<int>>& current_routes){
-    //for(int i=0;i<current_routes.size();i++){
-        //for(int j=0;j<current_routes.size();j++)
-        //    if()
-   // }
+double Tabu::is_single_route_possible(std::vector<int>& route,Graph& graph){
 
 
-   // return cost , routes;
+    Truck infotruck = graph.trucksvector[0];
+
+    double cost = 0, waiting_time_first_node=0;
+    int cargo = infotruck.capacity;
+
+
+    waiting_time_first_node = std::max(0.0,(graph.Nodes[route[0]].readytime-graph.distances[0][route[0]]));
+
+
+    cost += graph.distances[0][route[0]] + graph.Nodes[route[0]].servicetime + waiting_time_first_node;
+    cargo -= graph.Nodes[route[0]].demand;
+
+    for(int i=1;i<route.size();i++){
+        cargo -= graph.Nodes[route[i]].demand;
+        cost += graph.distances[route[i-1]][route[i]];
+        cost += std::max(0.0,(graph.Nodes[route[i]].readytime-cost));
+        cost += graph.Nodes[route[i]].servicetime;
+        if((cost <= graph.Nodes[route[i]].duedate) && (cargo >= graph.Nodes[route[i]].demand)){
+
+            continue;
+        }
+        else{
+            return -1;
+        }
+    }
+
+    cost += graph.distances[0][route[route.size()-1]];
+    //cost += graph.Nodes[route[route.size()-1]].servicetime;
+    if(cost <= graph.Nodes[0].duedate && cargo>=0){
+        cost -=graph.distances[0][route[route.size()-1]];
+        return cost;
+    }else{
+        return -1;
+    }
+return cost;
+}
+
+
+void Tabu::generate_neighbour(double& current_cost,int& current_used_trucks,std::vector<std::vector<int>>& current_routes,Graph& graph){
+    for(int i=0;i<current_routes.size();i++){
+        for(int j=0;j<current_routes.size();j++){
+            if(i != j && current_routes[i].size()>1 && current_routes[j].size()>1 ){
+                for(int k=0;k<=current_routes[i].size()-1;k++){
+                    for(int l=0;l<=current_routes[j].size()-1;l++){
+                        if(can_be_swaped(k,l,i,j,graph)){
+                            int temp_x = current_routes[i][k];
+                            current_routes[i][k] = current_routes[j][l];
+                            current_routes[j][l] = temp_x;
+
+
+                            //obliczanie nowego czasu trasy 'i' i 'j'
+                            current_cost = 0;
+                            for (int i = 0; i < graph.trucksvector.size(); i++)
+                            {
+                                if (!graph.trucksvector[i].route.empty()){
+                                    current_cost += graph.trucksvector[i].current_time + graph.distances[(current_routes[i][current_routes[i].size()-1])][0];
+
+                                }
+                            } 
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 
 void Tabu::Tabu_search(Graph& graph){
     //inicjalizacja zmiennych
     double current_solution_cost = 0;
-    double current_solution_used_trucks = 0;
+    int current_solution_used_trucks = 0;
     std::vector<std::vector<int>> current_solution_routes;
 
 
@@ -197,21 +243,22 @@ void Tabu::Tabu_search(Graph& graph){
     current_solution_routes = first_solution_routes;
     int no_improvement = 0;
     int iteration = 0;
-
+    double neighbour_solution_cost = current_solution_cost;
+    int neighbour_solution_used_trucks = current_solution_used_trucks;
+    std::vector<std::vector<int>> neighbour_solution_routes = current_solution_routes;
     //SZUKAMY LEPSZYCH SASIEDNICH ROZWIAZAN (NIE POZWALAJAC NA 2 TAKIE SAME JESLI POPRZEDNIE JESZCZE W TABU LIST)
 
     while(iteration < Max_iterations && no_improvement < no_improvement_limit){
         //tworzenie sąsiednich rozwiązań
-        double neighbour_solution_cost = current_solution_cost, neighbour_solution_used_trucks = current_solution_used_trucks; 
-        std::vector<std::vector<int>> neighbour_solution_routes = current_solution_routes;
 
-        generate_neighbours(neighbour_solution_cost, neighbour_solution_used_trucks, neighbour_solution_routes);
-        can_be_swaped(1,4,1,2,graph);
+        generate_neighbour(neighbour_solution_cost, neighbour_solution_used_trucks, neighbour_solution_routes, graph);
+
 
 
 
 
         iteration ++;
+        
     } 
 
 
@@ -233,7 +280,7 @@ void Tabu::Tabu_search(Graph& graph){
         std::cerr << "Nie można otworzyć pliku" << std::endl;
         return;
     }
-
+/*
     outputFile << std::fixed << std::setprecision(5) << first_solution_trucks_number + 1 << " " << first_solution_cost << std::endl;
     for (int l = 0; l < first_solution_routes.size(); l++)
     {
@@ -246,6 +293,22 @@ void Tabu::Tabu_search(Graph& graph){
             outputFile << std::endl;
         }
     }
+    */
+    outputFile << std::fixed << std::setprecision(5) << neighbour_solution_used_trucks + 1 << " " << neighbour_solution_cost << std::endl;
+    for (int l = 0; l < neighbour_solution_routes.size(); l++)
+    {
+        if (!neighbour_solution_routes[l].empty())
+        {
+            for (int k = 0; k < neighbour_solution_routes[l].size(); k++)
+            {
+                outputFile << neighbour_solution_routes[l][k] << " ";
+            }
+            outputFile << std::endl;
+        }
+    }
+
+
+
 
     outputFile.close();
 }

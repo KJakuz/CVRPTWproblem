@@ -25,7 +25,6 @@ int main(int argc, char *argv[])
         std::cerr << "Nie wczytano pliku: " << filename << std::endl;
         return 1;
     }
-
     graph.init_trucks(truck);
     graph.measure_distances();
     //graph.rungrasp();

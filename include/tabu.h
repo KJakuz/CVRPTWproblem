@@ -20,8 +20,9 @@ class Tabu
         int create_first_solution_with_grasp(Graph& graph);
         void Tabu_search(Graph& graph);
         double calculate_cost(const std::vector<std::vector<int>>& routes);
-        void generate_neighbours(double& current_cost,double& current_used_trucks,std::vector<std::vector<int>>& current_routes);
+        void generate_neighbour(double& current_cost,int& current_used_trucks,std::vector<std::vector<int>>& current_routes, Graph& graph);
         bool can_be_swaped(int index_of_node1, int index_of_node2,int idx_of_truck1,int idx_of_truck2,Graph& graph);
+        double is_single_route_possible(std::vector<int>& route,Graph& graph);
 
 
 };
