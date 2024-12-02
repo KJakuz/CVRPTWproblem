@@ -5,10 +5,12 @@ class Parameters {
     public:
         int distance_cost_param = 60;
         int window_time_param = 1;
-        int waiting_time_param = 40;
-        int demand_param = 40;
+        int waiting_time_param = 20;
+        int demand_param = 120;
         int RCLpercent = 1;
-        int time_limit_in_seconds = 1;
+        int time_limit_in_seconds = 3;
+
+        static const int Tabu_list_size = 50;
 
         Parameters() {}
 
