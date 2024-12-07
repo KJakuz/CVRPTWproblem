@@ -3,22 +3,27 @@
 
 class Parameters {
     public:
+        //grasp params
         int distance_cost_param = 60;
         int window_time_param = 1;
         int waiting_time_param = 20;
-        int demand_param = 120;
+        int demand_param = 20;
         int RCLpercent = 1;
-        int time_limit_in_seconds = 3;
 
-        static const int Tabu_list_size = 50;
+        //time param
+        int time_limit_in_seconds = 60;
+
+        //tabu search param
+        int no_improvement_limit = 4000;
+        static const int Tabu_list_size = 10000;
+
+        //simulated annealing
+        double temperature = 300;
+        double cooling_factor = 0.995;
+        double min_temperature = 0.1;
+
 
         Parameters() {}
-
-        void setAlfa(int value);
-        void setBeta(int value);
-        void setGamma(int value);
-        void setRCLpercent(int value);
-        void setTimeLimit(int value);
 
 };
 
