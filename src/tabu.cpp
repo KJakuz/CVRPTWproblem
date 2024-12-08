@@ -112,10 +112,10 @@ int Tabu::create_first_solution(Graph& graph){
 }
 
 
-bool Tabu::not_in_Tabu(const int* operation){
+bool Tabu::not_in_Tabu(const double* operation){
     //std::cout<<"tabu: "<< operation[0] <<" "<< operation[1] <<" " <<operation[2] <<" "<< operation[3] <<" \n";
     for(int i=0;i<default_parameters.Tabu_list_size;i++){
-        if(operation[5] == Tabu_list[i][5]){
+        if(std::fabs(operation[5]) == Tabu_list[i][5]){
             return false;
         }
         /*if(operation[4] >=0 && operation[4] <=4){
@@ -155,20 +155,26 @@ bool Tabu::not_in_Tabu(const int* operation){
 }
 
 
-void Tabu::add_to_Tabu(const int* operation){
+void Tabu::add_to_Tabu(const double* operation){
     // operation = [row1,column1,row2,column2,how_moved] how_moved = 0 - swap_2_nodes, 1 - multi route two opt, 2 - twoopt, etc.
+       //std::cout<<"\ntabu: ";
         for(int i = defaultParametersfortabu.Tabu_list_size - 1; i > 0; i--){
             Tabu_list[i][0]= Tabu_list[i-1][0];
            Tabu_list[i][1]= Tabu_list[i-1][1];
             Tabu_list[i][2]= Tabu_list[i-1][2];
             Tabu_list[i][3]= Tabu_list[i-1][3];
             Tabu_list[i][4]= Tabu_list[i-1][4];
+            Tabu_list[i][5]= Tabu_list[i-1][5];
+         //   std::cout<<std::fixed<<std::setprecision(5)<<Tabu_list[i][5]<<" ";
         }
+       // std::cout<<"\n";
         Tabu_list[0][0]= operation[0];
         Tabu_list[0][1]= operation[1];
         Tabu_list[0][2]= operation[2];
         Tabu_list[0][3]= operation[3];
         Tabu_list[0][4]= operation[4];
+        Tabu_list[0][5]= std::fabs(operation[5]);
+
 
 
 }
@@ -270,7 +276,7 @@ void Tabu::Tabu_search(Graph& graph){
    std::cout<<"starting cost: "<<first_solution_trucks_number+1<<" "<<first_solution_cost<<" \n ";
 
     //pierwsze rozwiazanie: first_solution_trucks_number, first_solution_cost, first_solution_routes
-    //current solution sprawdza czy tworzone neighbour solution jest lepsze od aktualnego(current), best sprawdza w razie resetów przy no improvement
+    //current solution sprawdza czy tworzone neighbour solution jest lepsze od aktualnego(current), best sprawdza w razie resetów przy no improvement lub wzroscie z sa
 
     double current_solution_cost = first_solution_cost;
     int current_solution_used_trucks = first_solution_trucks_number +1;
@@ -285,12 +291,9 @@ void Tabu::Tabu_search(Graph& graph){
     std::vector<std::vector<int>> best_solution_routes = current_solution_routes;
     
 
-    int used_ops[6] ={0,0,0,0,0,0};
+    double used_ops[6] ={0};
     Graph graphcopy = graph;
-    int no_improvement = 0;
-
-    //parametry simulated annealing 
-    
+    int no_improvement = 0;    
     
     auto start_time = std::chrono::steady_clock::now();
     auto end_time = start_time + std::chrono::seconds(defaultParametersfortabu.time_limit_in_seconds);
@@ -329,28 +332,27 @@ void Tabu::Tabu_search(Graph& graph){
     //delta do simulated annealing
     double delta_cost = neighbour_solution_cost - current_solution_cost;
 
-    //simulated annealing warunek przyciecia rozwiazania
-    if (accept_worse_solution(delta_cost, temperature)) {
+    if (neighbour_solution_used_trucks < current_solution_used_trucks) {
+        // Akceptuj natychmiast, jeśli zmniejsza liczbę ciężarówek
         current_solution_cost = neighbour_solution_cost;
         current_solution_routes = neighbour_solution_routes;
         current_solution_used_trucks = neighbour_solution_used_trucks;
-        std::cout << "iter: " << iteration << " -> accepted with delta: " << delta_cost << " at temp: " << temperature <<" used_operation "<<used_ops[4]<<" ikjl values: "<<used_ops[0]<<" "<<used_ops[1]<<" "<<used_ops[2]<<" "<<used_ops[3]<<" \n";
+        std::cout << "iter: " << iteration << " -> cost: "<<current_solution_used_trucks<<" "<<current_solution_cost<<" accepted with delta: " << delta_cost << " at temp: " << temperature <<" used_operation "<<static_cast<int>(used_ops[4])<<" \n";
+    }
+    else if (delta_cost != 0) {
+        current_solution_cost = neighbour_solution_cost;
+        current_solution_routes = neighbour_solution_routes;
+        current_solution_used_trucks = neighbour_solution_used_trucks;
+        std::cout << "iter: " << iteration << " -> cost: "<<current_solution_used_trucks<<" "<<current_solution_cost<<" accepted with delta: " << delta_cost << " at temp: " << temperature <<" used_operation "<<static_cast<int>(used_ops[4])<<" \n";
         update_graph_from_routes(graph, current_solution_routes);
         graphcopy.trucksvector = graph.trucksvector;
-        no_improvement = 0;}
-//*/
-/*
-        if (current_solution_cost > neighbour_solution_cost && current_solution_used_trucks >= neighbour_solution_used_trucks){
-            
-            current_solution_cost = neighbour_solution_cost;
-            current_solution_routes = neighbour_solution_routes;
-            current_solution_used_trucks = neighbour_solution_used_trucks;
-            std::cout<<"iter: "<<iteration<<" better -> "<<current_solution_used_trucks<<" "<<std::fixed << std::setprecision(5) <<current_solution_cost<<" used_operation "<<used_ops[4]<<" ikjl values: "<<used_ops[0]<<" "<<used_ops[1]<<" "<<used_ops[2]<<" "<<used_ops[3]<<" \n";
-            update_graph_from_routes(graph, current_solution_routes);
-            graphcopy.trucksvector = graph.trucksvector;
-            no_improvement =0;
+        no_improvement = 0;
+        if(current_solution_cost <= best_solution_cost && current_solution_used_trucks <= best_solution_used_trucks){
+                best_solution_cost = current_solution_cost;
+                best_solution_used_trucks = current_solution_used_trucks;
+                best_solution_routes = current_solution_routes;
+            }
         }
-//*/
         else{
             //std::cout<<"iter: "<<iteration<<" worse -> "<<current_solution_used_trucks<<" "<<std::fixed << std::setprecision(5) <<neighbour_solution_cost<<" used_operation "<<used_ops[4]<<" ikjl values: "<<used_ops[0]<<" "<<used_ops[1]<<" "<<used_ops[2]<<" "<<used_ops[3]<<" \n";
             no_improvement ++;
