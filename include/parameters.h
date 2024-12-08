@@ -11,15 +11,15 @@ class Parameters {
         int RCLpercent = 1;
 
         //time param
-        int time_limit_in_seconds = 60;
+        int time_limit_in_seconds = 300;
 
         //tabu search param
         int no_improvement_limit = 4000;
-        static const int Tabu_list_size = 10000;
+        static const int Tabu_list_size = 500;
 
         //simulated annealing
-        double temperature = 300;
-        double cooling_factor = 0.995;
+        double temperature = 1000;
+        double cooling_factor = 0.98;
         double min_temperature = 0.1;
 
 

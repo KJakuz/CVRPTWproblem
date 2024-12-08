@@ -14,6 +14,7 @@
 
 Parameters defaultParametersfortabu;
 int iteration =0;
+double temperature = defaultParametersfortabu.temperature;
 
 //potrzebne do graspa
 bool compare_Candidates_for_first_grasp(std::pair<Node, double> &a, std::pair<Node, double> &b)
@@ -114,17 +115,42 @@ int Tabu::create_first_solution(Graph& graph){
 bool Tabu::not_in_Tabu(const int* operation){
     //std::cout<<"tabu: "<< operation[0] <<" "<< operation[1] <<" " <<operation[2] <<" "<< operation[3] <<" \n";
     for(int i=0;i<default_parameters.Tabu_list_size;i++){
-        if( (Tabu_list[i][0] == operation[0] &&
-            Tabu_list[i][1] == operation[1] &&
-            Tabu_list[i][2] == operation[2] &&
-            Tabu_list[i][3] == operation[3] &&
-            Tabu_list[i][4] == operation[4])) 
-            {
-                return false;
-            }
+        if(operation[5] == Tabu_list[i][5]){
+            return false;
+        }
+        /*if(operation[4] >=0 && operation[4] <=4){
 
-            }
+            if( (Tabu_list[i][0] == operation[0] &&
+                Tabu_list[i][1] == operation[1] &&
+                Tabu_list[i][2] == operation[2] &&
+                Tabu_list[i][3] == operation[3] &&
+                Tabu_list[i][4] == operation[4]) ||
+                (Tabu_list[i][2] == operation[0] &&
+                Tabu_list[i][3] == operation[1] &&
+                Tabu_list[i][0] == operation[2] &&
+                Tabu_list[i][1] == operation[3] &&
+                Tabu_list[i][4] == operation[4]) ) 
+                {
+                    return false;
+                }
+            }else if(operation[4] == 5){
 
+                if( (Tabu_list[i][0] == operation[0] &&
+                Tabu_list[i][1] == operation[1] &&
+                Tabu_list[i][2] == operation[2] &&
+                Tabu_list[i][3] == operation[3] &&
+                Tabu_list[i][4] == operation[4]))
+                {
+                    return false;
+                }
+            }else if(operation[4] == 6){
+
+                if( (Tabu_list[i][1] == operation[1] || Tabu_list[i][1] == operation[3]) && operation[4] == Tabu_list[i][4])
+                {
+                    return false;
+                }
+            }*/
+    }
     return true;
 }
 
@@ -144,7 +170,7 @@ void Tabu::add_to_Tabu(const int* operation){
         Tabu_list[0][3]= operation[3];
         Tabu_list[0][4]= operation[4];
 
-    
+
 }
 
 
@@ -212,8 +238,8 @@ void Tabu::restart_solution(std::vector<std::vector<int>>& restart_solution_rout
 }
 
 
-bool accept_worse_solution(double delta_cost, double temperature) {
-    if (delta_cost < 0) return true; // Akceptacja lepszych rozwiązań
+bool Tabu::accept_worse_solution(double delta_cost, double temperature) {
+    if (delta_cost < 0) return true;
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<> dist(0, 1);
@@ -222,7 +248,6 @@ bool accept_worse_solution(double delta_cost, double temperature) {
 
 
 void Tabu::Tabu_search(Graph& graph){
-    
     auto start=std::chrono::high_resolution_clock::now();
     Graph restartgraph = graph;
 
@@ -260,14 +285,11 @@ void Tabu::Tabu_search(Graph& graph){
     std::vector<std::vector<int>> best_solution_routes = current_solution_routes;
     
 
-    int used_ops[5] ={0,0,0,0,0};
+    int used_ops[6] ={0,0,0,0,0,0};
     Graph graphcopy = graph;
     int no_improvement = 0;
 
     //parametry simulated annealing 
-    double temperature = 300.0;
-    double cooling_rate = 0.998;
-    double min_temperature = 0.1; 
     
     
     auto start_time = std::chrono::steady_clock::now();
@@ -303,19 +325,20 @@ void Tabu::Tabu_search(Graph& graph){
 
             no_improvement = 0;
         }
-
+///*
     //delta do simulated annealing
     double delta_cost = neighbour_solution_cost - current_solution_cost;
 
     //simulated annealing warunek przyciecia rozwiazania
-    if (accept_worse_solution(delta_cost, defaultParametersfortabu.temperature)) {
+    if (accept_worse_solution(delta_cost, temperature)) {
         current_solution_cost = neighbour_solution_cost;
         current_solution_routes = neighbour_solution_routes;
         current_solution_used_trucks = neighbour_solution_used_trucks;
-        //std::cout << "iter: " << iteration << " -> accepted with delta: " << delta_cost << " at temp: " << temperature << "\n";
+        std::cout << "iter: " << iteration << " -> accepted with delta: " << delta_cost << " at temp: " << temperature <<" used_operation "<<used_ops[4]<<" ikjl values: "<<used_ops[0]<<" "<<used_ops[1]<<" "<<used_ops[2]<<" "<<used_ops[3]<<" \n";
         update_graph_from_routes(graph, current_solution_routes);
         graphcopy.trucksvector = graph.trucksvector;
-        no_improvement = 0;
+        no_improvement = 0;}
+//*/
 /*
         if (current_solution_cost > neighbour_solution_cost && current_solution_used_trucks >= neighbour_solution_used_trucks){
             
@@ -326,8 +349,8 @@ void Tabu::Tabu_search(Graph& graph){
             update_graph_from_routes(graph, current_solution_routes);
             graphcopy.trucksvector = graph.trucksvector;
             no_improvement =0;
-*/
         }
+//*/
         else{
             //std::cout<<"iter: "<<iteration<<" worse -> "<<current_solution_used_trucks<<" "<<std::fixed << std::setprecision(5) <<neighbour_solution_cost<<" used_operation "<<used_ops[4]<<" ikjl values: "<<used_ops[0]<<" "<<used_ops[1]<<" "<<used_ops[2]<<" "<<used_ops[3]<<" \n";
             no_improvement ++;
@@ -338,7 +361,7 @@ void Tabu::Tabu_search(Graph& graph){
 
         }
 
-        defaultParametersfortabu.temperature = std::max(defaultParametersfortabu.temperature * defaultParametersfortabu.cooling_factor, defaultParametersfortabu.min_temperature);
+        temperature = std::max(temperature * defaultParametersfortabu.cooling_factor, defaultParametersfortabu.min_temperature);
         
         //aktualizacja sciezek w truckvector
         for (int i = 0; i < current_solution_routes.size(); i++) {
@@ -359,7 +382,7 @@ void Tabu::Tabu_search(Graph& graph){
 
 
 
-    //std::cout<<"ending iter: "<<iteration<<"\n";
+    std::cout<<"ending iter: "<<iteration<<"\n";
     auto stop=std::chrono::high_resolution_clock::now();  // Koniec pomiaru
     auto duration=std::chrono::duration_cast<std::chrono::seconds>(stop-start);
     //std::cout<<"\nCzas wykonania funkcji: "<<duration.count()<<" sekund"<<std::endl;
