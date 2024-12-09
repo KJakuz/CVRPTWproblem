@@ -277,6 +277,8 @@ void Graph::rungrasp()
     }
 
     outputFile << std::fixed << std::setprecision(5) << best_trucks_number + 1 << " " << best_cost << std::endl;
+    std::cout << std::fixed << std::setprecision(5) << best_trucks_number + 1 << " " << best_cost << std::endl;
+
     for (int l = 0; l < best_routes.size(); l++)
     {
         if (!best_routes[l].empty())
