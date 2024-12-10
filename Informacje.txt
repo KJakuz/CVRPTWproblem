@@ -29,7 +29,7 @@ nie zmieniamy wcześniejszego current solution.
         jesli sasiedztwo ma mniejszy koszt od koszt_rozwiazania_z_ktorego_tworzylismy_sasiedztwo to jest zawsze przyjete.
         Jesli nie to jest pewne prawdopodobienstwo zalezne od delty i temperatury ze przyjete.
 
-    Dygresja 2: Do tabu search dodajemy delta_cost kazdego przyjetego rozwiazania, aby uniknac problemu ze po zmniejszonym/zwiekszonym koszcie,
+    Dygresja 2: Do tabu list dodajemy delta_cost kazdego przyjetego rozwiazania, aby uniknac problemu ze po zmniejszonym/zwiekszonym koszcie,
                 spowrotem otrzymamy wczesniejsze rozwiazanie
                 (np zmieni sie node 3 i 2 z deltą 50, następnie zmieni się node 2 i 3 z deltą -50 i jesteśmy w tym samym miejscu co 2 iteracje wcześniej)
 
@@ -37,7 +37,8 @@ nie zmieniamy wcześniejszego current solution.
 
     Operatory: (nazwy moga sie zmienic)
         w poszukiwaniu sąsiedztwa rozwiązania użyte zostały operatory takie jak:
-            for_delta - najlepsze rozwiazanie ma najwieksza delte nie wazne czy ujemna czy dodatnia, 
+            slownik: for_delta - najlepsze rozwiazanie ma najwieksza delte nie wazne czy ujemna czy dodatnia 
+                     for_minimalization - najlepsze rozwiazanie jak daje lepszy koszt. 
 
             swap_two_nodes_for_delta/swap_two_nodes_for_minimalization - swap nodeow w 2 innych trasach
                                     mamy:    trasa 1: 1 2 3 4 5          trasa 2: 6 7 8 9 10

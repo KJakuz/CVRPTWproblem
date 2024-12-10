@@ -41,8 +41,8 @@ class Tabu
         void move_node_for_minimalization(double& current_cost, int& current_used_trucks, std::vector<std::vector<int>>& current_routes, double* used_ops, Graph& graph);
         void route_splitting_and_merging(double& current_cost, int& current_used_trucks, std::vector<std::vector<int>>& current_routes, double* used_ops, Graph& graph);
         void reduce_truck_count(double& current_cost, int& current_used_trucks, std::vector<std::vector<int>>& current_routes, double* used_ops, Graph& graph);
-        void optimal_route_merging(double& current_cost, int& current_used_trucks, std::vector<std::vector<int>>& current_routes, double* used_ops, Graph& graph);
-                                     
+        void sort_and_reassign_nodes(double &current_cost, int &current_used_trucks, std::vector<std::vector<int>> &current_routes, double *used_ops, Graph &graph);
+                           
 };
 
 #endif

@@ -8,17 +8,16 @@ class Parameters {
         int window_time_param = 1;
         int waiting_time_param = 20;
         int demand_param = 20;
-        double RCLpercent = 0.5;
+        double RCLpercent = 1;
 
         //time param
         int time_limit_in_seconds = 300;
 
         //tabu search params
-        int no_improvement_limit = 4000;
         static const int Tabu_list_size = 20;
-
+        int no_improvement_limit = Tabu_list_size;
         //simulated annealing params
-        double temperature = 500;
+        double temperature = 10;
         double cooling_factor = 0.975;
         double min_temperature = 0.1;
 

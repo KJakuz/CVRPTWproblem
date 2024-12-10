@@ -113,9 +113,9 @@ int Tabu::create_first_solution(Graph &graph)
 
 bool Tabu::not_in_Tabu(const double *operation)
 {
-    for (int i = 0; i < default_parameters.Tabu_list_size; i++)
+   for (int i = 0; i < default_parameters.Tabu_list_size; i++)
     {
-        if (std::fabs(operation[1]) == Tabu_list[i][1])
+        if (std::fabs(Tabu_list[i][1]) == std::fabs(operation[1]))
         {
             return false;
         }
@@ -125,13 +125,17 @@ bool Tabu::not_in_Tabu(const double *operation)
 
 void Tabu::add_to_Tabu(const double *operation)
 {
+    //std::cout<<"\n";
     for (int i = defaultParametersfortabu.Tabu_list_size - 1; i > 0; i--)
     {
         Tabu_list[i][0] = Tabu_list[i - 1][0];
         Tabu_list[i][1] = Tabu_list[i - 1][1];
+        //std::cout<<Tabu_list[i][1]<< " ";
     }
+    //std::cout<<"\n";
     Tabu_list[0][0] = operation[0];
     Tabu_list[0][1] = std::fabs(operation[1]);
+
 }
 
 double Tabu::is_single_route_possible(std::vector<int> &route, Graph &graph)
@@ -200,7 +204,7 @@ void Tabu::restart_solution(std::vector<std::vector<int>> &restart_solution_rout
         restart_solution_routes.push_back(graph.trucksvector[l].route);
     }
 
-    std::cout << "\nrestarting cost: " << restart_solution_trucks_number << " " << restart_solution_cost << " \n ";
+    //std::cout << "\nrestarting cost: " << restart_solution_trucks_number << " " << restart_solution_cost << " \n ";
 }
 
 bool Tabu::accept_worse_solution(double delta_cost, double temperature)
@@ -233,7 +237,7 @@ void Tabu::Tabu_search(Graph &graph)
         first_solution_routes.push_back(graph.trucksvector[l].route);
     }
 
-    //std::cout << "starting cost: " << first_solution_trucks_number + 1 << " " << first_solution_cost << " \n ";
+    std::cout << "starting cost: " << first_solution_trucks_number + 1 << " " << first_solution_cost << " \n ";
 
     // pierwsze rozwiazanie: first_solution_trucks_number, first_solution_cost, first_solution_routes
     // current solution sprawdza czy tworzone neighbour solution jest lepsze od aktualnego(current), best sprawdza w razie resetów przy no improvement lub wzroscie z sa
@@ -266,10 +270,9 @@ void Tabu::Tabu_search(Graph &graph)
 
         generate_neighbour(neighbour_solution_cost, neighbour_solution_used_trucks, neighbour_solution_routes, used_ops, graph);
 
-        // no improvement = reset NIEUZYWANE?
+
         if (no_improvement >= defaultParametersfortabu.no_improvement_limit)
         {
-            // zmien tabu list size albo cos w tym stylu
             Graph new_restart = restartgraph;
 
             if (current_solution_cost <= best_solution_cost && current_solution_used_trucks <= best_solution_used_trucks)
@@ -278,7 +281,7 @@ void Tabu::Tabu_search(Graph &graph)
                 best_solution_used_trucks = current_solution_used_trucks;
                 best_solution_routes = current_solution_routes;
             }
-
+            temperature = defaultParametersfortabu.temperature;
             restart_solution(current_solution_routes, current_solution_cost, current_solution_used_trucks, new_restart);
 
             graph = new_restart;
@@ -294,6 +297,7 @@ void Tabu::Tabu_search(Graph &graph)
 
         double delta_cost = neighbour_solution_cost - current_solution_cost;
 
+
         if (delta_cost != 0)
         {
             current_solution_cost = neighbour_solution_cost;
@@ -306,22 +310,24 @@ void Tabu::Tabu_search(Graph &graph)
             update_graph_from_routes(graph, current_solution_routes);
             graphcopy.trucksvector = graph.trucksvector;
             
-            no_improvement = 0;
-            if (current_solution_cost <= best_solution_cost && current_solution_used_trucks <= best_solution_used_trucks)
+            
+            if (current_solution_cost <= best_solution_cost || current_solution_used_trucks <= best_solution_used_trucks)
             {
+                no_improvement = 0;
                 best_solution_cost = current_solution_cost;
                 best_solution_used_trucks = current_solution_used_trucks;
                 best_solution_routes = current_solution_routes;
+            }else{
+                no_improvement++;
             }
         }
         else
         {
-            // std::cout<<"iter: "<<iteration<<" worse -> "<<current_solution_used_trucks<<" "<<std::fixed << std::setprecision(5) <<neighbour_solution_cost<<" used_operation "<<used_ops[4]<<" ikjl values: "<<used_ops[0]<<" "<<used_ops[1]<<" "<<used_ops[2]<<" "<<used_ops[3]<<" \n";
-            no_improvement++;
             neighbour_solution_cost = current_solution_cost;
             neighbour_solution_routes = current_solution_routes;
             neighbour_solution_used_trucks = current_solution_used_trucks;
             graph.trucksvector = graphcopy.trucksvector;
+            no_improvement ++;
         }
 
         temperature = std::max(temperature * defaultParametersfortabu.cooling_factor, defaultParametersfortabu.min_temperature);
@@ -343,7 +349,7 @@ void Tabu::Tabu_search(Graph &graph)
         best_solution_routes = current_solution_routes;
     }
 
-    std::cout << "ending iter: " << iteration << "\n";
+    //std::cout << "ending iter: " << iteration << "\n";
     auto stop = std::chrono::high_resolution_clock::now(); // Koniec pomiaru
     auto duration = std::chrono::duration_cast<std::chrono::seconds>(stop - start);
     // std::cout<<"\nCzas wykonania funkcji: "<<duration.count()<<" sekund"<<std::endl;
@@ -355,7 +361,7 @@ void Tabu::Tabu_search(Graph &graph)
     }
 
     outputFile << std::fixed << std::setprecision(5) << best_solution_used_trucks << " " << best_solution_cost << std::endl;
-    std::cout << std::fixed << std::setprecision(5) << best_solution_used_trucks << " " << best_solution_cost << std::endl;
+    std::cout <<"final solution: "<< std::fixed << std::setprecision(5) << best_solution_used_trucks << " " << best_solution_cost << std::endl;
     for (int l = 0; l < best_solution_routes.size(); l++)
     {
         if (!best_solution_routes[l].empty())
