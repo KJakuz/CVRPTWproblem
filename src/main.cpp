@@ -5,6 +5,8 @@
 #include "loadfile.h"
 #include "tabu.h"
 
+extern Parameters defaultParametersfortabu;
+
 int main(int argc, char *argv[])
 {
     Graph graph;
@@ -25,10 +27,32 @@ int main(int argc, char *argv[])
         std::cerr << "Nie wczytano pliku: " << filename << std::endl;
         return 1;
     }
+
+
+
     graph.init_trucks(truck);
     graph.measure_distances();
-    //graph.rungrasp();
-    tabu.Tabu_search(graph);
+    Graph graf = graph;
+
+    double temperature[4]={10000,500,1000,5000};
+    double coolingfactor[3]={0.99,0.945,0.93};
+
+    for(int i=0;i<2;i++){
+        for(int j=1;j<4;j++){
+            for(int s=0;s<3;s++){
+                graph = graf;
+                //defaultParametersfortabu.temperature=temperature[0];
+                //defaultParametersfortabu.cooling_factor=coolingfactor[s];
+                //graph.rungrasp();
+                tabu.Tabu_search(graph);
+
+            }
+        }
+        
+
+    }
+
+
 
     return 0;
 }

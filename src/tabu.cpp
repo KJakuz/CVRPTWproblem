@@ -221,7 +221,7 @@ void Tabu::Tabu_search(Graph &graph)
 {
     auto start = std::chrono::high_resolution_clock::now();
     Graph restartgraph = graph;
-
+    auto best_solution_find_time = std::chrono::high_resolution_clock::now();
     // first solution
     std::vector<std::vector<int>> first_solution_routes;
     double first_solution_cost = 0;
@@ -237,7 +237,7 @@ void Tabu::Tabu_search(Graph &graph)
         first_solution_routes.push_back(graph.trucksvector[l].route);
     }
 
-    std::cout << "starting cost: " << first_solution_trucks_number + 1 << " " << first_solution_cost << " \n ";
+    //std::cout << "starting cost: " << first_solution_trucks_number + 1 << " " << first_solution_cost << " \n ";
 
     // pierwsze rozwiazanie: first_solution_trucks_number, first_solution_cost, first_solution_routes
     // current solution sprawdza czy tworzone neighbour solution jest lepsze od aktualnego(current), best sprawdza w razie resetów przy no improvement lub wzroscie z sa
@@ -303,9 +303,9 @@ void Tabu::Tabu_search(Graph &graph)
             current_solution_cost = neighbour_solution_cost;
             current_solution_routes = neighbour_solution_routes;
             current_solution_used_trucks = neighbour_solution_used_trucks;
-            std::cout << "iter: " << iteration << " -> cost: " << current_solution_used_trucks << " " 
-                      << current_solution_cost << " accepted with delta: " << delta_cost << " at temp: " << temperature 
-                      << " used_operation " << static_cast<int>(used_ops[0]) << " \n";
+            //std::cout << "iter: " << iteration << " -> cost: " << current_solution_used_trucks << " " 
+            //          << current_solution_cost << " accepted with delta: " << delta_cost << " at temp: " << temperature 
+            //          << " used_operation " << static_cast<int>(used_ops[0]) << " \n";
             
             update_graph_from_routes(graph, current_solution_routes);
             graphcopy.trucksvector = graph.trucksvector;
@@ -317,6 +317,7 @@ void Tabu::Tabu_search(Graph &graph)
                 best_solution_cost = current_solution_cost;
                 best_solution_used_trucks = current_solution_used_trucks;
                 best_solution_routes = current_solution_routes;
+                best_solution_find_time = std::chrono::high_resolution_clock::now();
             }else{
                 no_improvement++;
             }
@@ -347,6 +348,7 @@ void Tabu::Tabu_search(Graph &graph)
         best_solution_cost = current_solution_cost;
         best_solution_used_trucks = current_solution_used_trucks;
         best_solution_routes = current_solution_routes;
+        best_solution_find_time = std::chrono::high_resolution_clock::now();
     }
 
     //std::cout << "ending iter: " << iteration << "\n";
@@ -359,9 +361,12 @@ void Tabu::Tabu_search(Graph &graph)
     {
         return;
     }
-
+    auto duration_to_best_sol = std::chrono::duration_cast<std::chrono::seconds>(best_solution_find_time - start);
     outputFile << std::fixed << std::setprecision(5) << best_solution_used_trucks << " " << best_solution_cost << std::endl;
-    std::cout <<"final solution: "<< std::fixed << std::setprecision(5) << best_solution_used_trucks << " " << best_solution_cost << std::endl;
+    std::cout <<defaultParametersfortabu.Tabu_list_size<<";"<<defaultParametersfortabu.temperature<<";"<<defaultParametersfortabu.cooling_factor<<";"<< std::fixed << std::setprecision(5) << best_solution_used_trucks << ";" << best_solution_cost <<";"<<graph.number_nodes<<";"<<duration_to_best_sol.count() <<std::endl;
+    //std::cout<<best_solution_find
+    
+    
     for (int l = 0; l < best_solution_routes.size(); l++)
     {
         if (!best_solution_routes[l].empty())

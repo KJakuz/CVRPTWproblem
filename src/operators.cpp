@@ -20,7 +20,7 @@ void Tabu::generate_neighbour(double &current_cost, int &current_used_trucks, st
     std::random_device rd;
     std::mt19937 gen(rd());
     //wagi uzycia operatorow, ostatni na 5 bo to jedyny operator, ktory w sposob sprawny minimalizuje uzycie ciezarowek
-     std::vector<double> operation_weights = { 1,1,1,1,1,1,3};
+     std::vector<double> operation_weights = { 1,1,1,1,1,1,1};
 
     std::discrete_distribution<> dist(operation_weights.begin(), operation_weights.end());
 
