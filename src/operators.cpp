@@ -10,17 +10,18 @@
 #include "graph.h"
 #include "trucks.h"
 #include "parameters.h"
-#include "tabu.h"
+#include "simulated_annealing.h"
 
 extern double temperature;
+extern double iteration;
 
-void Tabu::generate_neighbour(double &current_cost, int &current_used_trucks, std::vector<std::vector<int>> &current_routes, double *used_ops, Graph &graph)
+void Sa::generate_neighbour(double &current_cost, int &current_used_trucks, std::vector<std::vector<int>> &current_routes, double *used_ops, Graph &graph)
 {
 
     std::random_device rd;
     std::mt19937 gen(rd());
-    //wagi uzycia operatorow, ostatni na 5 bo to jedyny operator, ktory w sposob sprawny minimalizuje uzycie ciezarowek
-     std::vector<double> operation_weights = { 1,1,1,1,1,1,3};
+
+    std::vector<double> operation_weights = {1, 1, 1, 1, 1, 1, 3};
 
     std::discrete_distribution<> dist(operation_weights.begin(), operation_weights.end());
 
@@ -30,27 +31,20 @@ void Tabu::generate_neighbour(double &current_cost, int &current_used_trucks, st
     {
 
     case 0:
-        swap_two_nodes_for_delta(current_cost, current_used_trucks, current_routes, used_ops, graph);
+        swap_two_nodes(current_cost, current_used_trucks, current_routes, used_ops, graph);
         break;
     case 1:
-        two_opt_swap(current_cost, current_used_trucks, current_routes, used_ops, graph);
+        multi_route_two_opt_swap(current_cost, current_used_trucks, current_routes, used_ops, graph);
         break;
     case 2:
-        move_node_for_delta(current_cost, current_used_trucks, current_routes, used_ops, graph);
+        move_node(current_cost, current_used_trucks, current_routes, used_ops, graph);
         break;
     case 3:
-        move_node_for_minimalization(current_cost, current_used_trucks, current_routes, used_ops, graph);
-        break;
-    case 4:
-        swap_two_nodes_for_minimalization(current_cost, current_used_trucks, current_routes, used_ops, graph);
-        break;
-    case 5:
         route_splitting_and_merging(current_cost, current_used_trucks, current_routes, used_ops, graph);
         break;
-    case 6:
+    case 4:
         reduce_truck_count(current_cost, current_used_trucks, current_routes, used_ops, graph);
         break;
-
     }
 
     current_cost = 0;
@@ -65,7 +59,7 @@ void Tabu::generate_neighbour(double &current_cost, int &current_used_trucks, st
     }
 }
 
-void Tabu::swap_two_nodes_for_delta(double &current_cost, int &current_used_trucks, std::vector<std::vector<int>> &current_routes, double *used_ops, Graph &graph)
+void Sa::swap_two_nodes(double &current_cost, int &current_used_trucks, std::vector<std::vector<int>> &current_routes, double *used_ops, Graph &graph)
 {
     double best_absolute_delta = 0;
     double best_cost = current_cost;
@@ -94,13 +88,11 @@ void Tabu::swap_two_nodes_for_delta(double &current_cost, int &current_used_truc
 
                     if (time_for_route1 != -1 && time_for_route2 != -1)
                     {
-                        used_ops[0] = 0; //id operacji swap
+                        used_ops[0] = 0; // id operacji swap
 
-                        double new_cost = current_cost - graph.trucksvector[i].current_time - graph.trucksvector[j].current_time 
-                                        - graph.distances[0][current_routes[i].back()] - graph.distances[0][current_routes[j].back()] 
-                                        + time_for_route1 + time_for_route2 + graph.distances[0][test_route1.back()] + graph.distances[0][test_route2.back()];
+                        double new_cost = current_cost - graph.trucksvector[i].current_time - graph.trucksvector[j].current_time - graph.distances[0][current_routes[i].back()] - graph.distances[0][current_routes[j].back()] + time_for_route1 + time_for_route2 + graph.distances[0][test_route1.back()] + graph.distances[0][test_route2.back()];
                         double delta_cost = new_cost - current_cost;
-                        
+
                         used_ops[1] = delta_cost;
 
                         if (not_in_Tabu(used_ops))
@@ -109,7 +101,21 @@ void Tabu::swap_two_nodes_for_delta(double &current_cost, int &current_used_truc
                             double absolute_delta = std::abs(delta_cost);
                             if (delta_cost > 0 && !accept_worse_solution(delta_cost, temperature))
                                 continue;
-                            if (absolute_delta > best_absolute_delta)
+
+                            if (absolute_delta > best_absolute_delta && static_cast<int>(iteration) % 2 == 0)
+                            {
+                                best_absolute_delta = absolute_delta;
+                                best_cost = new_cost;
+                                best_i = i;
+                                best_j = j;
+                                best_k = k;
+                                best_l = l;
+                                best_delta = delta_cost;
+                                best_routes = {test_route1, test_route2};
+                                best_time_for_route1 = time_for_route1;
+                                best_time_for_route2 = time_for_route2;
+                            }
+                            else if (new_cost > best_cost && static_cast<int>(iteration) % 2 == 1)
                             {
                                 best_absolute_delta = absolute_delta;
                                 best_cost = new_cost;
@@ -139,7 +145,7 @@ void Tabu::swap_two_nodes_for_delta(double &current_cost, int &current_used_truc
 
         graph.trucksvector[best_i].current_time = best_time_for_route1;
         graph.trucksvector[best_j].current_time = best_time_for_route2;
-        
+
         if (current_cost != best_cost)
         {
             current_cost = best_cost;
@@ -151,7 +157,7 @@ void Tabu::swap_two_nodes_for_delta(double &current_cost, int &current_used_truc
     }
 }
 
-void Tabu::two_opt_swap(double &current_cost, int &current_used_trucks, std::vector<std::vector<int>> &current_routes, double *used_ops, Graph &graph)
+void Sa::multi_route_two_opt_swap(double &current_cost, int &current_used_trucks, std::vector<std::vector<int>> &current_routes, double *used_ops, Graph &graph)
 {
     double best_absolute_delta = 0;
     double best_cost = current_cost;
@@ -171,7 +177,7 @@ void Tabu::two_opt_swap(double &current_cost, int &current_used_trucks, std::vec
             {
                 for (int l = 1; l < current_routes[j].size(); l++)
                 {
-                    //laczenie prefixu jednej trasy z sufixem drugiej
+                    // laczenie prefixu jednej trasy z sufixem drugiej
                     std::vector<int> test_route1(current_routes[i].begin(), current_routes[i].begin() + k);
                     test_route1.insert(test_route1.end(), current_routes[j].begin() + l, current_routes[j].end());
 
@@ -186,9 +192,7 @@ void Tabu::two_opt_swap(double &current_cost, int &current_used_trucks, std::vec
 
                         used_ops[0] = 1;
 
-                        double new_cost = current_cost - graph.trucksvector[i].current_time - graph.trucksvector[j].current_time 
-                                        - graph.distances[0][current_routes[i].back()] - graph.distances[0][current_routes[j].back()] 
-                                        + time_for_route1 + time_for_route2 + graph.distances[0][test_route1.back()] + graph.distances[0][test_route2.back()];
+                        double new_cost = current_cost - graph.trucksvector[i].current_time - graph.trucksvector[j].current_time - graph.distances[0][current_routes[i].back()] - graph.distances[0][current_routes[j].back()] + time_for_route1 + time_for_route2 + graph.distances[0][test_route1.back()] + graph.distances[0][test_route2.back()];
                         double delta_cost = new_cost - current_cost;
 
                         used_ops[1] = std::fabs(delta_cost);
@@ -238,7 +242,7 @@ void Tabu::two_opt_swap(double &current_cost, int &current_used_trucks, std::vec
     }
 }
 
-void Tabu::move_node_for_delta(double &current_cost, int &current_used_trucks, std::vector<std::vector<int>> &current_routes, double *used_ops, Graph &graph)
+void Sa::move_node(double &current_cost, int &current_used_trucks, std::vector<std::vector<int>> &current_routes, double *used_ops, Graph &graph)
 {
     double best_absolute_delta = 0;
     double best_cost = current_cost;
@@ -280,7 +284,20 @@ void Tabu::move_node_for_delta(double &current_cost, int &current_used_trucks, s
 
                             if (delta_cost < 0 || accept_worse_solution(delta_cost, temperature))
                             {
-                                if (std::fabs(delta_cost) > best_absolute_delta)
+                                if (std::fabs(delta_cost) > best_absolute_delta && static_cast<int>(iteration) % 2 == 0)
+                                {
+                                    best_absolute_delta = std::abs(delta_cost);
+                                    best_cost = new_cost;
+                                    best_i = i;
+                                    best_j = j;
+                                    best_from = from;
+                                    best_insert_pos = insert_pos;
+                                    best_delta = delta_cost;
+                                    best_routes = {test_route1, test_route2};
+                                    best_time_for_route1 = time_for_route1;
+                                    best_time_for_route2 = time_for_route2;
+                                }
+                                else if (new_cost < best_cost && static_cast<int>(iteration) % 2 == 1)
                                 {
                                     best_absolute_delta = std::abs(delta_cost);
                                     best_cost = new_cost;
@@ -321,180 +338,11 @@ void Tabu::move_node_for_delta(double &current_cost, int &current_used_trucks, s
     }
 }
 
-void Tabu::move_node_for_minimalization(double &current_cost, int &current_used_trucks, std::vector<std::vector<int>> &current_routes, double *used_ops, Graph &graph)
-{
-    double best_cost = current_cost;
-    std::vector<std::vector<int>> best_routes = current_routes;
-    double best_source_route_time = -1, best_target_route_time = -1, best_delta = -1;
-    int best_source_route = -1, best_target_route = -1, best_node_idx = -1, best_insert_pos = -1;
-
-    for (int source_route = 0; source_route < current_routes.size(); ++source_route)
-    {
-        for (int target_route = 0; target_route < current_routes.size(); ++target_route)
-        {
-            if (source_route == target_route)
-                continue;
-
-            for (int node_idx = 0; node_idx < current_routes[source_route].size(); ++node_idx)
-            {
-                for (int insert_pos = 0; insert_pos <= current_routes[target_route].size(); ++insert_pos)
-                {
-                    std::vector<int> test_source_route = current_routes[source_route];
-                    std::vector<int> test_target_route = current_routes[target_route];
-
-                    int customer = test_source_route[node_idx];
-                    test_source_route.erase(test_source_route.begin() + node_idx);
-                    test_target_route.insert(test_target_route.begin() + insert_pos, customer);
-
-                    double source_route_time = is_single_route_possible(test_source_route, graph);
-                    double target_route_time = is_single_route_possible(test_target_route, graph);
-
-                    if (source_route_time != -1 && target_route_time != -1)
-                    {
-                        used_ops[0] = 3;
-                        
-                        if (current_routes[source_route].empty() || current_routes[target_route].empty())
-                            continue;
-                        
-                        double new_cost = current_cost - graph.trucksvector[source_route].current_time - graph.trucksvector[target_route].current_time - graph.distances[0][current_routes[source_route].back()] - graph.distances[0][current_routes[target_route].back()] + source_route_time + target_route_time + graph.distances[0][test_source_route.back()] + graph.distances[0][test_target_route.back()];
-                        double delta_cost = new_cost - current_cost;
-                        
-                        used_ops[1] = delta_cost;
-
-                        if (not_in_Tabu(used_ops))
-                        {
-
-                            if (delta_cost < 0 || accept_worse_solution(delta_cost, temperature))
-                            {
-                                if (new_cost < best_cost)
-                                {
-                                    best_cost = new_cost;
-                                    best_source_route = source_route;
-                                    best_target_route = target_route;
-                                    best_node_idx = node_idx;
-                                    best_insert_pos = insert_pos;
-                                    best_delta = delta_cost;
-                                    best_routes = {test_source_route, test_target_route};
-                                    best_source_route_time = source_route_time;
-                                    best_target_route_time = target_route_time;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    if (best_source_route != -1 && best_target_route != -1)
-    {
-        current_routes[best_source_route] = best_routes[0];
-        current_routes[best_target_route] = best_routes[1];
-
-        graph.trucksvector[best_source_route].route = best_routes[0];
-        graph.trucksvector[best_target_route].route = best_routes[1];
-
-        graph.trucksvector[best_source_route].current_time = best_source_route_time;
-        graph.trucksvector[best_target_route].current_time = best_target_route_time;
-
-        current_cost = best_cost;
-
-        used_ops[0] = 3;
-        used_ops[1] = std::fabs(best_delta);
-        add_to_Tabu(used_ops);
-    }
-}
-
-void Tabu::swap_two_nodes_for_minimalization(double &current_cost, int &current_used_trucks, std::vector<std::vector<int>> &current_routes, double *used_ops, Graph &graph)
-{
-    double best_cost = current_cost;
-    std::vector<int> best_route1_vec, best_route2_vec;
-    double best_route1_time = -1, best_route2_time = -1, best_delta = -1;
-    int best_route1 = -1, best_route2 = -1;
-    int best_node1_idx = -1, best_node2_idx = -1;
-
-    for (int route1 = 0; route1 < current_routes.size(); ++route1)
-    {
-        if (current_routes[route1].empty())
-            continue;
-
-        for (int route2 = route1 + 1; route2 < current_routes.size(); ++route2)
-        {
-            if (current_routes[route2].empty())
-                continue;
-
-            for (int node1_idx = 0; node1_idx < current_routes[route1].size(); ++node1_idx)
-            {
-                for (int node2_idx = 0; node2_idx < current_routes[route2].size(); ++node2_idx)
-                {
-                    std::vector<int> test_route1 = current_routes[route1];
-                    std::vector<int> test_route2 = current_routes[route2];
-                    std::swap(test_route1[node1_idx], test_route2[node2_idx]);
-
-                    double route1_time = is_single_route_possible(test_route1, graph);
-                    double route2_time = is_single_route_possible(test_route2, graph);
-
-                    if (route1_time != -1 && route2_time != -1)
-                    {
-                        used_ops[0] = 4;
-
-                        double old_route1_time = graph.trucksvector[route1].current_time;
-                        double old_route2_time = graph.trucksvector[route2].current_time;
-
-                        double new_cost = current_cost - old_route1_time - old_route2_time - graph.distances[0][current_routes[route1].back()] - graph.distances[0][current_routes[route2].back()] + route1_time + route2_time + graph.distances[0][test_route1.back()] + graph.distances[0][test_route2.back()];
-                        double delta_cost = new_cost - current_cost;
-
-                        used_ops[1] = delta_cost;
-                        if (not_in_Tabu(used_ops))
-                        {
-                            if (delta_cost < 0 || accept_worse_solution(delta_cost, temperature))
-                            {
-                                if (new_cost < best_cost)
-                                {
-                                    best_cost = new_cost;
-                                    best_route1 = route1;
-                                    best_route2 = route2;
-                                    best_node1_idx = node1_idx;
-                                    best_node2_idx = node2_idx;
-                                    best_delta = delta_cost;
-                                    best_route1_vec = test_route1;
-                                    best_route2_vec = test_route2;
-                                    best_route1_time = route1_time;
-                                    best_route2_time = route2_time;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    if (best_route1 != -1 && best_route2 != -1)
-    {
-        current_routes[best_route1] = best_route1_vec;
-        current_routes[best_route2] = best_route2_vec;
-
-        graph.trucksvector[best_route1].route = best_route1_vec;
-        graph.trucksvector[best_route2].route = best_route2_vec;
-
-        graph.trucksvector[best_route1].current_time = best_route1_time;
-        graph.trucksvector[best_route2].current_time = best_route2_time;
-
-        current_cost = best_cost;
-
-        used_ops[0] = 4;
-        used_ops[1] = std::fabs(best_delta);
-
-        add_to_Tabu(used_ops);
-    }
-}
-
-void Tabu::route_splitting_and_merging(double &current_cost, int &current_used_trucks, std::vector<std::vector<int>> &current_routes, double *used_ops, Graph &graph)
+void Sa::route_splitting_and_merging(double &current_cost, int &current_used_trucks, std::vector<std::vector<int>> &current_routes, double *used_ops, Graph &graph)
 {
     double best_absolute_delta = 0;
     double best_cost = current_cost;
-    std::vector<std::vector<int>> best_routes = current_routes; 
+    std::vector<std::vector<int>> best_routes = current_routes;
     int best_split_idx = -1, best_merge_idx = -1, best_split_point = -1, best_insert_pos = -1;
     double best_first_route_time = -1, best_merged_route_time = -1, best_delta = -1;
 
@@ -585,12 +433,12 @@ void Tabu::route_splitting_and_merging(double &current_cost, int &current_used_t
     }
 }
 
-void Tabu::reduce_truck_count(double &current_cost, int &current_used_trucks, std::vector<std::vector<int>> &current_routes, double *used_ops, Graph &graph)
+void Sa::reduce_truck_count(double &current_cost, int &current_used_trucks, std::vector<std::vector<int>> &current_routes, double *used_ops, Graph &graph)
 {
     double best_cost = current_cost;
     bool truck_reduction_achieved = false;
 
-    //sort po skomplikowaniu tras
+    // sort po skomplikowaniu tras
     std::vector<std::pair<int, double>> route_utilization;
     for (int i = 0; i < current_routes.size(); ++i)
     {
@@ -604,13 +452,11 @@ void Tabu::reduce_truck_count(double &current_cost, int &current_used_trucks, st
               [](const auto &a, const auto &b)
               { return a.second < b.second; });
 
-
     for (int merge_attempts = 0; merge_attempts < current_used_trucks; ++merge_attempts)
     {
         bool reduction_in_this_attempt = false;
 
-
-        //od poczatku posortowania sa latwiejsze trasy do polaczenai
+        // od poczatku posortowania sa latwiejsze trasy do polaczenai
         for (int source_route_idx = 0; source_route_idx < route_utilization.size(); source_route_idx++)
         {
             if (current_routes[source_route_idx].empty())
@@ -626,16 +472,17 @@ void Tabu::reduce_truck_count(double &current_cost, int &current_used_trucks, st
                 if (target_route == source_route_idx || current_routes[target_route].empty())
                     continue;
 
-            std::vector<int> insertion_points;
-            for(int i=0;i<static_cast<int>(current_routes[target_route].size());i++) {
-                insertion_points.push_back(i);
-            }
+                std::vector<int> insertion_points;
+                for (int i = 0; i < static_cast<int>(current_routes[target_route].size()); i++)
+                {
+                    insertion_points.push_back(i);
+                }
                 for (int insert_pos : insertion_points)
                 {
                     std::vector<int> test_source_route = current_routes[source_route_idx];
                     std::vector<int> test_target_route = current_routes[target_route];
 
-                    //wkladanie sciezki do innej w 3 miejscach
+                    // wkladanie sciezki do innej w 3 miejscach
                     test_target_route.insert(test_target_route.begin() + insert_pos,
                                              test_source_route.begin(),
                                              test_source_route.end());
@@ -655,7 +502,7 @@ void Tabu::reduce_truck_count(double &current_cost, int &current_used_trucks, st
                         double merge_score = delta_cost + time_balance_penalty + complexity_penalty;
                         used_ops[0] = 6;
                         used_ops[1] = delta_cost;
-                        
+
                         if (merge_score < best_delta_cost)
                         {
                             best_target_route = target_route;
@@ -685,8 +532,9 @@ void Tabu::reduce_truck_count(double &current_cost, int &current_used_trucks, st
                 reduction_in_this_attempt = true;
                 truck_reduction_achieved = true;
 
-                route_utilization.erase(std::remove_if(route_utilization.begin(), route_utilization.end(),[source_route_idx](const auto &pair)
-                                   { return pair.first == source_route_idx; }),route_utilization.end());
+                route_utilization.erase(std::remove_if(route_utilization.begin(), route_utilization.end(), [source_route_idx](const auto &pair)
+                                                       { return pair.first == source_route_idx; }),
+                                        route_utilization.end());
 
                 break;
             }
@@ -696,107 +544,10 @@ void Tabu::reduce_truck_count(double &current_cost, int &current_used_trucks, st
             break;
     }
 
-
     if (truck_reduction_achieved)
     {
         used_ops[0] = 6;
         used_ops[1] = current_cost - best_cost;
-        add_to_Tabu(used_ops);
-    }
-}
-
-
-void Tabu::sort_and_reassign_nodes(double &current_cost, int &current_used_trucks, std::vector<std::vector<int>> &current_routes, double *used_ops, Graph &graph) {
-    bool any_changes_made = false;
-
-    // Iterujemy po trasach źródłowych, które chcemy opróżnić
-    for (int source_route_idx = 0; source_route_idx < current_routes.size(); ++source_route_idx) {
-        if (current_routes[source_route_idx].empty()) continue; // Pomiń puste trasy
-
-        bool route_cleared = true;
-
-        // Próbujemy przenieść każdy węzeł z trasy źródłowej
-        for (int node_idx = 0; node_idx < static_cast<int>(current_routes[source_route_idx].size());) {
-            int node = current_routes[source_route_idx][node_idx];
-            bool node_reassigned = false;
-
-            // Posortuj trasy docelowe według ich obecnego czasu (rosnąco)
-            std::vector<int> target_routes_indices;
-            for (int i = 0; i < current_routes.size(); ++i) {
-                if (i != source_route_idx && !current_routes[i].empty()) {
-                    target_routes_indices.push_back(i);
-                }
-            }
-            std::sort(target_routes_indices.begin(), target_routes_indices.end(), [&](int a, int b) {
-                return graph.trucksvector[a].current_time < graph.trucksvector[b].current_time;
-            });
-
-            // Szukamy najlepszej trasy docelowej
-            for (int target_route_idx : target_routes_indices) {
-                for (int insert_pos = 0; insert_pos <= static_cast<int>(current_routes[target_route_idx].size()); ++insert_pos) {
-                    // Symulacja przeniesienia węzła
-                    std::vector<int> test_source_route = current_routes[source_route_idx];
-                    std::vector<int> test_target_route = current_routes[target_route_idx];
-
-                    test_source_route.erase(test_source_route.begin() + node_idx);
-                    test_target_route.insert(test_target_route.begin() + insert_pos, node);
-
-                    // Sprawdź, czy obie trasy są możliwe
-                    double source_route_time = is_single_route_possible(test_source_route, graph);
-                    double target_route_time = is_single_route_possible(test_target_route, graph);
-
-                    if (source_route_time != -1 && target_route_time != -1) {
-                        // Oblicz nowy koszt
-                        double new_cost = current_cost 
-                                        - graph.trucksvector[source_route_idx].current_time 
-                                        - graph.trucksvector[target_route_idx].current_time 
-                                        + source_route_time 
-                                        + target_route_time;
-
-                        double delta_cost = new_cost - current_cost;
-                        used_ops[0]=7;
-                        used_ops[1]=delta_cost;
-                        if(!not_in_Tabu(used_ops)) continue;
-                        if (new_cost <= current_cost || accept_worse_solution(delta_cost, temperature)) {
-                            // Przenieś węzeł na stałe
-                            current_routes[source_route_idx] = test_source_route;
-                            current_routes[target_route_idx] = test_target_route;
-
-                            // Zaktualizuj graf
-                            graph.trucksvector[source_route_idx].route = current_routes[source_route_idx];
-                            graph.trucksvector[target_route_idx].route = current_routes[target_route_idx];
-                            graph.trucksvector[source_route_idx].current_time = source_route_time;
-                            graph.trucksvector[target_route_idx].current_time = target_route_time;
-
-                            current_cost = new_cost;
-                            node_reassigned = true;
-                            any_changes_made = true;
-                            break;
-                        }
-                    }
-                }
-                if (node_reassigned) break;
-            }
-
-            // Jeśli nie udało się przenieść węzła, przerywamy próbę opróżnienia trasy
-            if (!node_reassigned) {
-                route_cleared = false;
-                break;
-            }
-        }
-
-        // Jeśli trasa została opróżniona, zmniejszamy liczbę ciężarówek
-        if (route_cleared && current_routes[source_route_idx].empty()) {
-            current_used_trucks--;
-            graph.trucksvector[source_route_idx].route.clear();
-            graph.trucksvector[source_route_idx].current_time = 0;
-        }
-    }
-
-    // Dodajemy operację do tabu, jeśli dokonano zmian
-    if (any_changes_made) {
-        used_ops[0] = 7; // ID operatora
-        used_ops[1] = current_cost;
         add_to_Tabu(used_ops);
     }
 }

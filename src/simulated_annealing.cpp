@@ -8,22 +8,21 @@
 #include <iomanip>
 #include <functional>
 #include "graph.h"
-#include "tabu.h"
+#include "simulated_annealing.h"
 #include "trucks.h"
 #include "parameters.h"
 
-Parameters defaultParametersfortabu;
+Parameters default_parameters_for_sa;
 int iteration = 0;
-double temperature = defaultParametersfortabu.temperature;
+double temperature = default_parameters_for_sa.temperature;
 
-// potrzebne do graspa
+// needed for grasp
 bool compare_Candidates_for_first_grasp(std::pair<Node, double> &a, std::pair<Node, double> &b)
 {
     return a.second < b.second; // rosnaco wedlug kosztow
 }
 
-// grasp z metody pierwszej
-int Tabu::create_first_solution(Graph &graph)
+int Sa::create_first_solution(Graph &graph)
 {
 
     std::ofstream outputFile("wyniki.txt");
@@ -62,8 +61,8 @@ int Tabu::create_first_solution(Graph &graph)
                         double waiting_time_costs = std::max(0.0, graph.unvisited[i].readytime - (graph.trucksvector[idx_of_truck].current_time + graph.distances[graph.trucksvector[idx_of_truck].which_node][graph.unvisited[i].id]));
                         double window_time_costs = std::max(0.0, graph.unvisited[i].duedate - (graph.trucksvector[idx_of_truck].current_time + graph.distances[graph.trucksvector[idx_of_truck].which_node][graph.unvisited[i].id]));
                         double demand_cost = (graph.trucksvector[idx_of_truck].capacity - graph.trucksvector[idx_of_truck].cargo) - graph.unvisited[i].demand;
-                        double cost = defaultParametersfortabu.distance_cost_param * graph.distances[graph.trucksvector[idx_of_truck].which_node][graph.unvisited[i].id] +
-                                      +defaultParametersfortabu.demand_param * demand_cost + defaultParametersfortabu.window_time_param * window_time_costs + defaultParametersfortabu.waiting_time_param * waiting_time_costs;
+                        double cost = default_parameters_for_sa.distance_cost_param * graph.distances[graph.trucksvector[idx_of_truck].which_node][graph.unvisited[i].id] +
+                                      +default_parameters_for_sa.demand_param * demand_cost + default_parameters_for_sa.window_time_param * window_time_costs + default_parameters_for_sa.waiting_time_param * waiting_time_costs;
                         candidates.push_back(std::make_pair(graph.unvisited[i], cost));
                     }
                 }
@@ -88,7 +87,7 @@ int Tabu::create_first_solution(Graph &graph)
         std::sort(candidates.begin(), candidates.end(), compare_Candidates_for_first_grasp);
 
         // wybieramy losowo wezel z pierwszych iles procent kandydatow
-        int limit = std::max(static_cast<int>(candidates.size() * (defaultParametersfortabu.RCLpercent / 100.0)), 1);
+        int limit = std::max(static_cast<int>(candidates.size() * (default_parameters_for_sa.RCLpercent / 100.0)), 1);
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_int_distribution<> dis(0, limit - 1);
@@ -111,9 +110,9 @@ int Tabu::create_first_solution(Graph &graph)
     return idx_of_truck;
 }
 
-bool Tabu::not_in_Tabu(const double *operation)
+bool Sa::not_in_Tabu(const double *operation)
 {
-   for (int i = 0; i < default_parameters.Tabu_list_size; i++)
+    for (int i = 0; i < default_parameters.Tabu_list_size; i++)
     {
         if (std::fabs(Tabu_list[i][1]) == std::fabs(operation[1]))
         {
@@ -123,22 +122,19 @@ bool Tabu::not_in_Tabu(const double *operation)
     return true;
 }
 
-void Tabu::add_to_Tabu(const double *operation)
+void Sa::add_to_Tabu(const double *operation)
 {
-    //std::cout<<"\n";
-    for (int i = defaultParametersfortabu.Tabu_list_size - 1; i > 0; i--)
+
+    for (int i = default_parameters_for_sa.Tabu_list_size - 1; i > 0; i--)
     {
         Tabu_list[i][0] = Tabu_list[i - 1][0];
         Tabu_list[i][1] = Tabu_list[i - 1][1];
-        //std::cout<<Tabu_list[i][1]<< " ";
     }
-    //std::cout<<"\n";
     Tabu_list[0][0] = operation[0];
     Tabu_list[0][1] = std::fabs(operation[1]);
-
 }
 
-double Tabu::is_single_route_possible(std::vector<int> &route, Graph &graph)
+double Sa::is_single_route_possible(std::vector<int> &route, Graph &graph)
 {
 
     Truck infotruck = graph.trucksvector[0];
@@ -180,7 +176,7 @@ double Tabu::is_single_route_possible(std::vector<int> &route, Graph &graph)
     return cost;
 }
 
-void update_graph_from_routes(Graph &graph, const std::vector<std::vector<int>> &routes)
+void Sa::update_graph_from_routes(Graph &graph, const std::vector<std::vector<int>> &routes)
 {
     for (int i = 0; i < routes.size(); ++i)
     {
@@ -188,7 +184,7 @@ void update_graph_from_routes(Graph &graph, const std::vector<std::vector<int>> 
     }
 }
 
-void Tabu::restart_solution(std::vector<std::vector<int>> &restart_solution_routes, double &restart_solution_cost, int &restart_solution_trucks_number, Graph &graph)
+void Sa::restart_solution(std::vector<std::vector<int>> &restart_solution_routes, double &restart_solution_cost, int &restart_solution_trucks_number, Graph &graph)
 {
     restart_solution_routes.clear();
     restart_solution_cost = 0;
@@ -203,11 +199,9 @@ void Tabu::restart_solution(std::vector<std::vector<int>> &restart_solution_rout
     {
         restart_solution_routes.push_back(graph.trucksvector[l].route);
     }
-
-    //std::cout << "\nrestarting cost: " << restart_solution_trucks_number << " " << restart_solution_cost << " \n ";
 }
 
-bool Tabu::accept_worse_solution(double delta_cost, double temperature)
+bool Sa::accept_worse_solution(double delta_cost, double temperature)
 {
     if (delta_cost < 0)
         return true;
@@ -217,7 +211,7 @@ bool Tabu::accept_worse_solution(double delta_cost, double temperature)
     return dist(gen) < std::exp(-delta_cost / temperature);
 }
 
-void Tabu::Tabu_search(Graph &graph)
+void Sa::simulated_annealing(Graph &graph)
 {
     auto start = std::chrono::high_resolution_clock::now();
     Graph restartgraph = graph;
@@ -237,7 +231,7 @@ void Tabu::Tabu_search(Graph &graph)
         first_solution_routes.push_back(graph.trucksvector[l].route);
     }
 
-    std::cout << "starting cost: " << first_solution_trucks_number + 1 << " " << first_solution_cost << " \n ";
+    // std::cout << "starting cost: " << first_solution_trucks_number + 1 << " " << first_solution_cost << " \n ";
 
     // pierwsze rozwiazanie: first_solution_trucks_number, first_solution_cost, first_solution_routes
     // current solution sprawdza czy tworzone neighbour solution jest lepsze od aktualnego(current), best sprawdza w razie resetów przy no improvement lub wzroscie z sa
@@ -259,19 +253,17 @@ void Tabu::Tabu_search(Graph &graph)
     int no_improvement = 0;
 
     auto start_time = std::chrono::steady_clock::now();
-    auto end_time = start_time + std::chrono::seconds(defaultParametersfortabu.time_limit_in_seconds);
+    auto end_time = start_time + std::chrono::seconds(default_parameters_for_sa.time_limit_in_seconds);
 
     std::random_device rd;
     std::mt19937 gen(rd());
-
 
     while (std::chrono::steady_clock::now() < end_time)
     {
 
         generate_neighbour(neighbour_solution_cost, neighbour_solution_used_trucks, neighbour_solution_routes, used_ops, graph);
 
-
-        if (no_improvement >= defaultParametersfortabu.no_improvement_limit)
+        if (no_improvement >= default_parameters_for_sa.no_improvement_limit)
         {
             Graph new_restart = restartgraph;
 
@@ -281,7 +273,7 @@ void Tabu::Tabu_search(Graph &graph)
                 best_solution_used_trucks = current_solution_used_trucks;
                 best_solution_routes = current_solution_routes;
             }
-            temperature = defaultParametersfortabu.temperature;
+            temperature = default_parameters_for_sa.temperature;
             restart_solution(current_solution_routes, current_solution_cost, current_solution_used_trucks, new_restart);
 
             graph = new_restart;
@@ -294,30 +286,29 @@ void Tabu::Tabu_search(Graph &graph)
             no_improvement = 0;
         }
 
-
         double delta_cost = neighbour_solution_cost - current_solution_cost;
-
 
         if (delta_cost != 0)
         {
             current_solution_cost = neighbour_solution_cost;
             current_solution_routes = neighbour_solution_routes;
             current_solution_used_trucks = neighbour_solution_used_trucks;
-            std::cout << "iter: " << iteration << " -> cost: " << current_solution_used_trucks << " " 
-                      << current_solution_cost << " accepted with delta: " << delta_cost << " at temp: " << temperature 
-                      << " used_operation " << static_cast<int>(used_ops[0]) << " \n";
-            
+            // std::cout << "iter: " << iteration << " -> cost: " << current_solution_used_trucks << " "
+            //           << current_solution_cost << " accepted with delta: " << delta_cost << " at temp: " << temperature
+            //           << " used_operation " << static_cast<int>(used_ops[0]) << " \n";
+
             update_graph_from_routes(graph, current_solution_routes);
             graphcopy.trucksvector = graph.trucksvector;
-            
-            
+
             if (current_solution_cost <= best_solution_cost || current_solution_used_trucks <= best_solution_used_trucks)
             {
                 no_improvement = 0;
                 best_solution_cost = current_solution_cost;
                 best_solution_used_trucks = current_solution_used_trucks;
                 best_solution_routes = current_solution_routes;
-            }else{
+            }
+            else
+            {
                 no_improvement++;
             }
         }
@@ -327,11 +318,10 @@ void Tabu::Tabu_search(Graph &graph)
             neighbour_solution_routes = current_solution_routes;
             neighbour_solution_used_trucks = current_solution_used_trucks;
             graph.trucksvector = graphcopy.trucksvector;
-            no_improvement ++;
+            no_improvement++;
         }
 
-        temperature = std::max(temperature * defaultParametersfortabu.cooling_factor, defaultParametersfortabu.min_temperature);
-
+        temperature = std::max(temperature * default_parameters_for_sa.cooling_factor, default_parameters_for_sa.min_temperature);
 
         for (int i = 0; i < current_solution_routes.size(); i++)
         {
@@ -349,10 +339,10 @@ void Tabu::Tabu_search(Graph &graph)
         best_solution_routes = current_solution_routes;
     }
 
-    //std::cout << "ending iter: " << iteration << "\n";
-    auto stop = std::chrono::high_resolution_clock::now(); // Koniec pomiaru
+    auto stop = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::seconds>(stop - start);
-    // std::cout<<"\nCzas wykonania funkcji: "<<duration.count()<<" sekund"<<std::endl;
+
+    // std::cout <<"final solution: "<< std::fixed << std::setprecision(5) << best_solution_used_trucks << " " << best_solution_cost << std::endl;
 
     std::ofstream outputFile("wyniki.txt");
     if (!outputFile.is_open())
@@ -361,7 +351,6 @@ void Tabu::Tabu_search(Graph &graph)
     }
 
     outputFile << std::fixed << std::setprecision(5) << best_solution_used_trucks << " " << best_solution_cost << std::endl;
-    std::cout <<"final solution: "<< std::fixed << std::setprecision(5) << best_solution_used_trucks << " " << best_solution_cost << std::endl;
     for (int l = 0; l < best_solution_routes.size(); l++)
     {
         if (!best_solution_routes[l].empty())

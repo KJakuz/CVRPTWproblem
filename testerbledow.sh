@@ -1,13 +1,13 @@
 #!/bin/bash
 
-input_dir="./errors"
+input_dir="./testfiles"
 
 input_files=("$input_dir"/*.txt)
 
-for input_file in "${input_files[@]}"; do
-    echo "Przetwarzanie pliku: $input_file"
+while true; do
+    for input_file in "${input_files[@]}"; do
+        echo "Przetwarzanie pliku: $input_file"
     
-    while true; do
         ./program.exe "$input_file"
 
         # Uruchomienie drugiego programu i sprawdzenie komunikatu OK
