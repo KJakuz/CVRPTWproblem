@@ -13,6 +13,8 @@
 #include "tabu.h"
 
 extern double temperature;
+extern double iteration;
+extern Parameters defaultParametersfortabu;
 
 void Tabu::generate_neighbour(double &current_cost, int &current_used_trucks, std::vector<std::vector<int>> &current_routes, double *used_ops, Graph &graph)
 {
@@ -20,7 +22,7 @@ void Tabu::generate_neighbour(double &current_cost, int &current_used_trucks, st
     std::random_device rd;
     std::mt19937 gen(rd());
     //wagi uzycia operatorow, ostatni na 5 bo to jedyny operator, ktory w sposob sprawny minimalizuje uzycie ciezarowek
-     std::vector<double> operation_weights = { 1,1,1,1,1,1,1};
+     std::vector<double> operation_weights = { defaultParametersfortabu.op1,defaultParametersfortabu.op2,defaultParametersfortabu.op3,0,0,defaultParametersfortabu.op4,defaultParametersfortabu.op5};
 
     std::discrete_distribution<> dist(operation_weights.begin(), operation_weights.end());
 
@@ -39,10 +41,10 @@ void Tabu::generate_neighbour(double &current_cost, int &current_used_trucks, st
         move_node_for_delta(current_cost, current_used_trucks, current_routes, used_ops, graph);
         break;
     case 3:
-        move_node_for_minimalization(current_cost, current_used_trucks, current_routes, used_ops, graph);
+        //move_node_for_minimalization(current_cost, current_used_trucks, current_routes, used_ops, graph);
         break;
     case 4:
-        swap_two_nodes_for_minimalization(current_cost, current_used_trucks, current_routes, used_ops, graph);
+        //swap_two_nodes_for_minimalization(current_cost, current_used_trucks, current_routes, used_ops, graph);
         break;
     case 5:
         route_splitting_and_merging(current_cost, current_used_trucks, current_routes, used_ops, graph);
@@ -109,7 +111,21 @@ void Tabu::swap_two_nodes_for_delta(double &current_cost, int &current_used_truc
                             double absolute_delta = std::abs(delta_cost);
                             if (delta_cost > 0 && !accept_worse_solution(delta_cost, temperature))
                                 continue;
-                            if (absolute_delta > best_absolute_delta)
+
+                            if (absolute_delta > best_absolute_delta && static_cast<int>(iteration) % 2 == 0 )
+                            {
+                                best_absolute_delta = absolute_delta;
+                                best_cost = new_cost;
+                                best_i = i;
+                                best_j = j;
+                                best_k = k;
+                                best_l = l;
+                                best_delta = delta_cost;
+                                best_routes = {test_route1, test_route2};
+                                best_time_for_route1 = time_for_route1;
+                                best_time_for_route2 = time_for_route2;
+                            }
+                            else if (new_cost > best_cost && static_cast<int>(iteration) % 2 == 1 )
                             {
                                 best_absolute_delta = absolute_delta;
                                 best_cost = new_cost;
@@ -280,7 +296,20 @@ void Tabu::move_node_for_delta(double &current_cost, int &current_used_trucks, s
 
                             if (delta_cost < 0 || accept_worse_solution(delta_cost, temperature))
                             {
-                                if (std::fabs(delta_cost) > best_absolute_delta)
+                                if (std::fabs(delta_cost) > best_absolute_delta && static_cast<int>(iteration) % 2 == 0)
+                                {
+                                    best_absolute_delta = std::abs(delta_cost);
+                                    best_cost = new_cost;
+                                    best_i = i;
+                                    best_j = j;
+                                    best_from = from;
+                                    best_insert_pos = insert_pos;
+                                    best_delta = delta_cost;
+                                    best_routes = {test_route1, test_route2};
+                                    best_time_for_route1 = time_for_route1;
+                                    best_time_for_route2 = time_for_route2;
+                                }
+                                else if (new_cost < best_cost && static_cast<int>(iteration) % 2 == 1)
                                 {
                                     best_absolute_delta = std::abs(delta_cost);
                                     best_cost = new_cost;

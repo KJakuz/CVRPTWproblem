@@ -364,6 +364,8 @@ void Tabu::Tabu_search(Graph &graph)
     auto duration_to_best_sol = std::chrono::duration_cast<std::chrono::seconds>(best_solution_find_time - start);
     outputFile << std::fixed << std::setprecision(5) << best_solution_used_trucks << " " << best_solution_cost << std::endl;
     std::cout <<defaultParametersfortabu.Tabu_list_size<<";"<<defaultParametersfortabu.temperature<<";"<<defaultParametersfortabu.cooling_factor<<";"<< std::fixed << std::setprecision(5) << best_solution_used_trucks << ";" << best_solution_cost <<";"<<graph.number_nodes<<";"<<duration_to_best_sol.count() <<std::endl;
+    //std::cout <<defaultParametersfortabu.op1<<";"<<defaultParametersfortabu.op2<<";"<<defaultParametersfortabu.op3<<";"<<defaultParametersfortabu.op4<<";"<<defaultParametersfortabu.op5<<";"<< std::fixed << std::setprecision(5) << best_solution_used_trucks << ";" << best_solution_cost <<";"<<std::endl;
+
     //std::cout<<best_solution_find
     
     

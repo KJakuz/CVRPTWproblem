@@ -37,10 +37,8 @@ nie zmieniamy wcześniejszego current solution.
 
     Operatory: (nazwy moga sie zmienic)
         w poszukiwaniu sąsiedztwa rozwiązania użyte zostały operatory takie jak:
-            slownik: for_delta - najlepsze rozwiazanie ma najwieksza delte nie wazne czy ujemna czy dodatnia 
-                     for_minimalization - najlepsze rozwiazanie jak daje lepszy koszt. 
 
-            swap_two_nodes_for_delta/swap_two_nodes_for_minimalization - swap nodeow w 2 innych trasach
+            swap_two_nodes - swap nodeow w 2 innych trasach
                                     mamy:    trasa 1: 1 2 3 4 5          trasa 2: 6 7 8 9 10
                     możemy otrzymać np:    trasa 1: 1 2 7 4 5         trasa 2: 6 3 8 9 10
 
@@ -48,7 +46,7 @@ nie zmieniamy wcześniejszego current solution.
                                     mamy:    trasa 1: 1 2 3 4 5          trasa 2: 6 7 8 9 10
                     możemy otrzymać np:    trasa 1: 1 2 3 9 10         trasa 2: 6 7 8 4 5
 
-            move_node_for_delta/move_node_for_minimalization - przeniesienie jednego klienta do innej trasy na daną pozycje 
+            move_node - przeniesienie jednego klienta do innej trasy na daną pozycje 
                                     mamy:    trasa 1: 1 2 3 4 5          trasa 2: 6 7 8 9 10
                     możemy otrzymać np:    trasa 1: 1 3 4 5         trasa 2: 6 7 8 2 9 10                                      
 
